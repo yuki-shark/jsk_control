@@ -67,6 +67,7 @@ namespace jsk_footstep_planner
                   const bool use_obstacle_model = false):
       max_successor_distance_(0.0), max_successor_rotation_(0.0),
       publish_progress_(false),
+      force_ignore_projection_(false),
       resolution_(resolution),
       use_pointcloud_model_(use_pointcloud_model),
       lazy_projection_(lazy_projection),
@@ -87,7 +88,9 @@ namespace jsk_footstep_planner
     }
     virtual std::vector<StatePtr> successors(StatePtr target_state) {
       std::vector<StatePtr> ret;
+
       successor_func_(target_state, ret);
+
       return ret;
     }
 
@@ -113,7 +116,7 @@ namespace jsk_footstep_planner
     virtual Eigen::Affine3f getRobotCoords(StatePtr current_state, StatePtr previous_state) const;
     virtual void setBasicSuccessors(
       std::vector<Eigen::Affine3f> left_to_right_successors);
-    
+
     virtual void setGoalState(
       FootstepState::Ptr left, FootstepState::Ptr right)
     {
@@ -125,7 +128,7 @@ namespace jsk_footstep_planner
     {
       left_goal_state_ = goal;
     }
-    
+
     virtual void setRightGoalState(FootstepState::Ptr goal)
     {
       right_goal_state_ = goal;
@@ -136,7 +139,7 @@ namespace jsk_footstep_planner
      * return string about graph information.
      */
     virtual std::string infoString() const;
-    
+
     bool finalizeSteps(const StatePtr &last_1_Step, const StatePtr &lastStep,
                        std::vector<StatePtr> &finalizeSteps);
 
@@ -191,7 +194,7 @@ namespace jsk_footstep_planner
       obstacle_model_ = model;
       obstacle_tree_model_->setInputCloud(obstacle_model_);
     }
-    
+
     virtual bool projectGoal();
     virtual bool projectStart();
     virtual bool isSuccessable(StatePtr current_state, StatePtr previous_state);
@@ -228,6 +231,9 @@ namespace jsk_footstep_planner
     {
       heuristic_path_.reset(new jsk_recognition_utils::PolyLine(path_line)); // copy ???
     }
+    void setIgnoreProjection(const bool in) {
+      force_ignore_projection_ = in;
+    }
   protected:
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
@@ -251,6 +257,7 @@ namespace jsk_footstep_planner
     double max_successor_distance_;
     double max_successor_rotation_;
     bool publish_progress_;
+    bool force_ignore_projection_;
     ros::Publisher pub_progress_;
     // const params
     const bool use_pointcloud_model_;

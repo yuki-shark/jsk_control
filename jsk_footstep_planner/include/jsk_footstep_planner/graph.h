@@ -55,7 +55,7 @@ namespace jsk_footstep_planner
 
     virtual StatePtr getStartState() { return start_state_; }
     virtual StatePtr getGoalState() { return goal_state_; }
-    
+
     virtual void addNode(StatePtr state) { nodes_.push_back(state); }
     virtual size_t numNodes() { return nodes_.size(); }
     virtual std::vector<StatePtr> successors(StatePtr target_state) = 0;
@@ -63,7 +63,7 @@ namespace jsk_footstep_planner
     {
       return prev_cost + 1;
     }
-    
+
     virtual bool isGoal(StatePtr state) = 0;
 
   protected:
@@ -73,7 +73,7 @@ namespace jsk_footstep_planner
     //double pos_goal_thr_;
     //double rot_goal_thr_;
   private:
-    
+
   };
 }
 

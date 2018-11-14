@@ -56,7 +56,7 @@ namespace jsk_footstep_planner
     typedef typename boost::function<void(FootstepAStarSolver&, GraphPtr)> ProfileFunction;
     typedef typename std::priority_queue<SolverNodePtr,
                                          std::vector<SolverNodePtr>,
-                                         std::greater<SolverNodePtr> > OpenList;    
+                                         std::greater<SolverNodePtr> > OpenList;
     FootstepAStarSolver(
       GraphPtr graph, size_t x_num, size_t y_num, size_t theta_num,
       unsigned int profile_period = 1024,
@@ -70,7 +70,7 @@ namespace jsk_footstep_planner
       is_cancelled_(false),
       AStarSolver<GraphT>(graph)
     {
-      
+
     }
 
     virtual double fn(SolverNodePtr n)
@@ -78,7 +78,7 @@ namespace jsk_footstep_planner
       return cost_weight_ * gn(n) + heuristic_weight_ * hn(n);
     }
 
-    
+
     virtual
     std::vector<typename SolverNode<State, GraphT>::Ptr>
     solve(const ros::WallDuration& timeout = ros::WallDuration(1000000000.0))
@@ -94,8 +94,14 @@ namespace jsk_footstep_planner
         SolverNodePtr target_node = popFromOpenList();
         if (graph_->usePointCloudModel() && lazy_projection) {
           unsigned int error_state;
-          StatePtr projected_state = graph_->projectFootstep(target_node->getState(),
-                                                             error_state);
+          StatePtr projected_state;
+          // if (target_node->getGeneration() < 10) {
+          if (target_node->getGeneration() < 6) {
+            projected_state = target_node->getState();
+          } else {
+            projected_state = graph_->projectFootstep(target_node->getState(),
+                                                      error_state);
+          }
           if (!projected_state) { // failed to project footstep
             if (graph_->localMovement() && error_state == projection_state::close_to_success) {
               // try local movement
@@ -104,8 +110,14 @@ namespace jsk_footstep_planner
                 std::vector<StatePtr> states_candidates
                   = graph_->localMoveFootstepState(target_node->getState());
                 for (int i = 0; i < states_candidates.size(); i ++) {
-                  StatePtr tmp_state = graph_->projectFootstep(states_candidates[i],
-                                                               error_state);
+                  StatePtr tmp_state;
+                  // if (target_node->getGeneration() < 10) {
+                  if (target_node->getGeneration() < 6) {
+                    tmp_state = states_candidates[i];
+                  } else {
+                    tmp_state = graph_->projectFootstep(states_candidates[i],
+                                                        error_state);
+                  }
                   if (!!tmp_state) {
                     locally_moved_states.push_back(tmp_state);
                   }
@@ -150,7 +162,12 @@ namespace jsk_footstep_planner
         }
         else if (!findInCloseList(target_node->getState())) {
           addToCloseList(target_node->getState());
+          // if (target_node->getGeneration() < 10) graph_->setIgnoreProjection(true);
+          if (target_node->getGeneration() < 6) graph_->setIgnoreProjection(true);
           std::vector<SolverNodePtr> next_nodes = target_node->expand(target_node, verbose_);
+          // if (target_node->getGeneration() < 10) graph_->setIgnoreProjection(false);
+          if (target_node->getGeneration() < 6) graph_->setIgnoreProjection(false);
+
           // Add to open list only if next_nodes is not in close list.
           // We can do it thanks to FootstepStateDiscreteCloseList
           for (size_t i = 0; i < next_nodes.size(); i++) {
@@ -167,7 +184,7 @@ namespace jsk_footstep_planner
       // Failed to search
       return std::vector<SolverNodePtr>();
     }
-    
+
     virtual void cancelSolve() {
       is_cancelled_ = true;
       ROS_FATAL("cancel planning");
@@ -185,7 +202,7 @@ namespace jsk_footstep_planner
     }
 
     virtual OpenList getOpenList() { return open_list_; }
-    
+
     virtual FootstepStateDiscreteCloseList getCloseList() { return footstep_close_list_; }
     virtual void setProfileFunction(ProfileFunction f)
     {
@@ -207,13 +224,13 @@ namespace jsk_footstep_planner
     {
       footstep_close_list_.toPointCloud<PointT>(output_cloud);
     }
-    
+
     template <class PointT>
     void openListToPointCloud(pcl::PointCloud<PointT>& output_cloud)
     {
       output_cloud.points.reserve(open_list_.size());
       OpenList copied_open_list = open_list_;
-      
+
       while (copied_open_list.size() > 0)
       {
         SolverNodePtr solver_node = copied_open_list.top();
@@ -236,14 +253,14 @@ namespace jsk_footstep_planner
         }
       }
     }
-    
+
     using Solver<GraphT>::isOpenListEmpty;
     using Solver<GraphT>::popFromOpenList;
     using Solver<GraphT>::addToOpenList;
     using BestFirstSearchSolver<GraphT>::addToOpenList;
     using AStarSolver<GraphT>::gn;
     using AStarSolver<GraphT>::hn;
-    
+
   protected:
     unsigned int loop_counter_;
     unsigned int profile_period_;

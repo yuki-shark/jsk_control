@@ -1,0 +1,261 @@
+<launch>
+  <arg name="rviz" default="true"/>
+  <arg name="use_joy" default="false"/>
+  <arg name="joy_dev" default="/dev/input/js0"/>
+  <arg name="use_footstep_marker" default="true"/>
+  <arg name="use_go_pos_server"   default="false"/>
+  <arg name="use_floor_detection" default="false"/>
+  <arg name="use_footstep_plane_detection" default="false"/>
+  <arg name="use_octomap"    default="false" />
+  <arg name="use_obstacle"   default="false" />
+  <arg name="use_pointcloud" default="true" />
+  <arg name="use_footstep_controller" default="true" />
+  <arg name="LAUNCH_TF_BUFFER_SERVER" default="true" />
+  <arg name="USE_NORMAL" default="false" />
+
+  <arg name="obstacle_cloud" default="/robot_center_pointcloud_bbox_clipped/output" />
+  <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" />
+
+  <arg if="$(arg use_octomap)"     name="input_obstacle_cloud"
+       value="octomap_point_cloud_centers" />
+  <arg unless="$(arg use_octomap)" name="input_obstacle_cloud"
+       value="$(arg obstacle_cloud)" />
+  <arg if="$(arg USE_NORMAL)"     name="input_point_cloud"
+       value="/footstep_normal_estimation/output_with_xyz" />
+  <arg unless="$(arg USE_NORMAL)" name="input_point_cloud"
+       value="$(arg point_cloud)" />
+
+  <!-- footstep planner -->
+  <node pkg="jsk_footstep_planner" type="footstep_planner_node"
+        name="footstep_planner" output="screen">
+    <remap from="~pointcloud_model" to="$(arg input_point_cloud)" />
+    <remap from="~obstacle_model" to="$(arg input_obstacle_cloud)" />
+    <!-- use point cloud (plane estimation) for making footstep -->
+    <rosparam subst_value="true">
+      use_pointcloud_model: $(arg use_pointcloud)
+      #project_start_state:  $(arg use_pointcloud)
+      project_start_state:  false
+      project_goal_state:   $(arg use_pointcloud)
+    </rosparam>
+    <!-- obstacles -->
+    <rosparam subst_value="true">
+      use_obstacle_model: $(arg use_obstacle)
+      obstacle_resolution: 0.1
+      ## collision_bbox_size: [0.4, , 1.0]
+      collision_bbox_size: [0.35, 0.65, 0.65]
+      collision_bbox_offset: [0, 0, 0.8]
+    </rosparam>
+    <!-- size of foot -->
+    <!--
+    <rosparam>
+      ## offset from end-coords -> center of cube
+      lleg_footstep_offset: [0.015502,  0.010078, 0.0]
+      rleg_footstep_offset: [0.015502, -0.010078, 0.0]
+      ## without padding
+      footstep_size_x: 0.237418
+      footstep_size_y: 0.134017
+    </rosparam>
+    -->
+    <!-- leptrino foot -->
+    <rosparam>
+      ## offset from end-coords -> center of cube
+      #lleg_footstep_offset: [0.0, 0.0, 0.0]
+      #rleg_footstep_offset: [0.0, 0.0, 0.0]
+      lleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding
+      rleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding
+      ## without padding
+      ##footstep_size_x: 0.230
+      footstep_size_x: 0.260 ## add toe padding
+      footstep_size_y: 0.135
+    </rosparam>
+    <!-- parameters for plane estimation -->
+    <rosparam subst_value="true">
+      skip_cropping: false
+      plane_estimation_use_normal: $(arg USE_NORMAL)
+      plane_estimation_normal_distance_weight: 0.2
+      plane_estimation_normal_opening_angle:   0.2
+      plane_estimation_min_ratio_of_inliers:   0.8
+      plane_estimation_max_iterations:         200
+      plane_estimation_min_inliers:            100
+      plane_estimation_outlier_threshold:    0.024
+    </rosparam>
+    <!-- parameters for moving footstep locally -->
+    <rosparam>
+      use_lazy_perception: false
+      use_local_movement:  true
+      local_move_x: 0.02
+      local_move_y: 0.01
+      local_move_theta: 0.1
+      local_move_x_num: 1
+      local_move_y_num: 0
+      local_move_theta_num: 0
+      local_move_x_offset: 0.14
+      local_move_y_offset: 0.0
+      local_move_theta_offset: 0.0
+    </rosparam>
+    <!-- limitation of steps -->
+    <rosparam>
+      use_transision_limit: false
+      transition_limit_x: 0.5
+      transition_limit_y: 0.35
+      transition_limit_z: 0.4
+      transition_limit_roll:  0.6
+      transition_limit_pitch: 0.6
+      transition_limit_yaw:   0.4
+    </rosparam>
+    <rosparam>
+      support_check_x_sampling: 3
+      support_check_y_sampling: 3
+      support_check_vertex_neighbor_threshold: 0.02
+      support_padding_x: 0.0 ##
+      support_padding_y: 0.0 ##
+    </rosparam>
+    <!-- successors -->
+    <rosparam>
+      ## default_lfoot_to_rfoot_offset: [x, y, theta]
+      ## default_lfoot_to_rfoot_offset: [0, -0.220156, 0] ## within offset end-coords to center of cube
+      default_lfoot_to_rfoot_offset: [0, -0.200, 0] ## just offset between end-coords of legs
+      ## successors is a list of transformations from left foot to right foot
+      ## if the parameter named 'default_lfoot_to_rfoot_offset' is set, it would be added to successors.
+      successors:
+# stepping
+      - x: 0
+        y: 0
+        theta: 0
+# + side step
+      - x: 0
+        y: -0.10
+        theta: 0
+      - x: 0
+        y: -0.04
+        theta: 0
+# - side step
+      - x: 0
+        y: 0.06
+        theta: 0
+      - x: 0
+        y: 0.02
+        theta: 0
+# froward
+      - x: 0.16
+        y: 0
+        theta: 0
+      - x: 0.10
+        y: 0
+        theta: 0
+      - x: 0.02
+        y: 0
+        theta: 0
+## add for step adjust
+      - x: 0.13
+        y: 0
+        theta: 0
+      - x: 0.07
+        y: 0
+        theta: 0
+# backward
+      - x: -0.10
+        y: 0
+        theta: 0
+      - x: -0.04
+        y: 0
+        theta: 0
+# + twist
+      - x: 0
+        y: 0
+        theta: 0.14
+      - x: 0
+        y: 0
+        theta: 0.05
+      - x: 0
+        y: -0.06
+        theta: 0.19
+# forward + twist
+      - x: 0.10
+        y: 0
+        theta: 0.14
+      - x: 0.04
+        y: 0
+        theta: 0.09
+# - twist
+      - x: 0
+        y: 0
+        theta: -0.14
+      - x: 0
+        y: 0
+        theta: -0.05
+      - x: 0
+        y: -0.06
+        theta: -0.19
+# forward - twist
+      - x: 0.10
+        y: 0
+        theta: -0.14
+      - x: 0.04
+        y: 0
+        theta: -0.09
+# backward + twist
+      - x: -0.04
+        y: 0
+        theta: 0.09
+# backward - twist
+      - x: -0.04
+        y: 0
+        theta: -0.09
+    </rosparam>
+  </node>
+
+  <!-- footstep marker -->
+  <group if="$(arg use_footstep_marker)">
+    <node pkg="jsk_footstep_planner" type="footstep_marker" name="footstep_marker" output="screen">
+      <remap from="/footstep_controller" to="jaxon_footstep_controller"/>
+      <rosparam subst_value="true">
+        disable_tf: false
+        frame_id: map
+        lleg_end_coords: lleg_end_coords
+        rleg_end_coords: rleg_end_coords
+        footstep_size_x: 0.237418
+        footstep_size_y: 0.134017
+        lleg_footstep_offset: [0.015502,  0.010078, 0.0]
+        rleg_footstep_offset: [0.015502, -0.010078, 0.0]
+        default_footstep_margin: 0.2
+        use_default_step_as_goal: true
+      </rosparam>
+    </node>
+    <nnode pkg="jsk_footstep_controller" type="jaxon-footstep-controller.l"
+          name="jaxon_footstep_controller" output="screen" if="$(arg use_footstep_controller)">
+      <param name="use_step_refine" value="true" />
+      <param name="plane_projection" value="$(arg use_footstep_plane_detection)"/>
+      <remap from="~planes" to="/footstep_plane_plane_rejector/output_polygons"/>
+    </nnode>
+    <include file="$(find jsk_teleop_joy)/launch/joy_footstep_marker.launch" if="$(arg use_joy)">
+      <arg name="CONTROLLER_DEV" value="$(arg joy_dev)"/>
+    </include>
+  </group>
+
+  <group if="$(arg use_go_pos_server)">
+    <node pkg="roseus" type="roseus" name="go_pos_server"
+          args="$(find jsk_footstep_controller)/euslisp/go-pos-server.l"
+          output="screen">
+      <param name="force_replanning" value="false" />
+      <param name="plane_projection" value="$(arg use_footstep_plane_detection)"/>
+      <remap from="~planes" to="/footstep_plane_plane_rejector/output_polygons"/>
+    </node>
+  </group>
+
+  <include file="$(find jsk_footstep_planner)/launch/footstep_plane_detection.launch" if="$(arg use_footstep_plane_detection)">
+    <arg name="input_cloud" value="$(arg point_cloud)" />
+    <arg name="fixed_frame_id" value="map" />
+  </include>
+
+  <include file="$(find jsk_footstep_controller)/launch/floor_detection.launch" if="$(arg use_floor_detection)">
+    <arg name="use_snapshot" value="false"/>
+  </include>
+
+  <node pkg="rviz" type="rviz" name="rviz"
+        args="-d $(find jsk_footstep_planner)/config/jaxon_footstep_planner_perception.rviz"
+        if="$(arg rviz)"/>
+
+  <node pkg="tf2_ros" type="buffer_server" name="tf2_buffer_server"
+        if="$(arg LAUNCH_TF_BUFFER_SERVER)" />
+</launch>

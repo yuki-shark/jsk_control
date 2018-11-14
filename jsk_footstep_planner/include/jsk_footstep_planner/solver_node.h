@@ -37,7 +37,7 @@
 #ifndef JSK_FOOTSTEP_PLANNER_SOLVER_NODE_H_
 #define JSK_FOOTSTEP_PLANNER_SOLVER_NODE_H_
 
-#include <algorithm> 
+#include <algorithm>
 #include <iterator>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
@@ -63,7 +63,9 @@ namespace jsk_footstep_planner
     }
 
     SolverNode(StatePtr state, const double cost, GraphPtr graph):
-      cost_(cost), state_(state), graph_(graph) {}
+      cost_(cost), state_(state), graph_(graph) {
+      generation_ = 0;
+    }
 
     virtual
     StatePtr getState() const { return state_; }
@@ -92,6 +94,7 @@ namespace jsk_footstep_planner
       std::vector<Ptr> solver_nodes;
       if (graph_ptr) {
         std::vector<StatePtr> successors = graph_ptr->successors(state_);
+
         if (verbose) {
           std::cerr << successors.size() << " successors" << std::endl;
         }

@@ -9,7 +9,14 @@ roslaunch jsk_footstep_planner optimistic_footstep_planner.launch USE_CONTROLLER
 
 ")
 (initialize-eus-footstep-planning-client)
-(setq result (plan-footstep-from-goal-coords (make-coords :pos (float-vector 3000 0 0))))
+(setq result (plan-footstep-from-goal-coords (make-coords :pos (float-vector 3000 0 0))
+					     :frame-id "map"
+					     ))
+
+;; (initialize-eus-footstep-planning-client)
+;; (setq result (plan-footstep-from-goal-coords (make-coords :pos (float-vector 2374.18 1340.17 10))
+;;                                              :frame-id "map"
+;;                                                   ))
 (let ((footstep-coords (footstep-array->coords result)))
   (print-readable-coords footstep-coords)
   ;; (send *ri* :set-foot-steps footstep-coords) ;; send real-robot if needed

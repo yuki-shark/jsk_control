@@ -97,7 +97,7 @@ namespace jsk_footstep_planner
     }
     return false;
   }
-  
+
   Eigen::Affine3f FootstepGraph::getRobotCoords(StatePtr current_state, StatePtr previous_state) const
   {
     Eigen::Affine3f mid = current_state->midcoords(*previous_state);
@@ -132,7 +132,7 @@ namespace jsk_footstep_planner
     }
     return false;
   }
-                                       
+
   // return true if colliding with obstacle
   bool FootstepGraph::isColliding(StatePtr current_state, StatePtr previous_state)
   {
@@ -206,7 +206,7 @@ namespace jsk_footstep_planner
     ss << "  support_padding_x: " << parameters_.support_padding_x << std::endl;
     ss << "  support_padding_y: " << parameters_.support_padding_y << std::endl;
     ss << "  skip_cropping: " << parameters_.skip_cropping << std::endl;
-    
+
     return ss.str();
   }
 
@@ -228,7 +228,7 @@ namespace jsk_footstep_planner
     }
     return true;
   }
-  
+
   std::vector<FootstepState::Ptr>
   FootstepGraph::localMoveFootstepState(FootstepState::Ptr in)
   {
@@ -270,7 +270,7 @@ namespace jsk_footstep_planner
     }
     return moved_states;
   }
-  
+
   bool FootstepGraph::successors_original(StatePtr target_state, std::vector<FootstepGraph::StatePtr> &ret)
   {
     std::vector<Eigen::Affine3f> transformations;
@@ -295,7 +295,7 @@ namespace jsk_footstep_planner
                                                      base_pose * transform,
                                                      target_state->getDimensions(),
                                                      resolution_));
-      if (use_pointcloud_model_ && !lazy_projection_) {
+      if (use_pointcloud_model_ && !lazy_projection_ && !force_ignore_projection_) {
         // Update footstep position by projection
         unsigned int error_state;
         FootstepGraph::StatePtr tmpnext = projectFootstep(next, error_state);
@@ -326,7 +326,7 @@ namespace jsk_footstep_planner
     unsigned int error_state;
     return projectFootstep(in, error_state);
   }
-  
+
   FootstepState::Ptr FootstepGraph::projectFootstep(FootstepState::Ptr in,
                                                     unsigned int& error_state)
   {
@@ -346,7 +346,7 @@ namespace jsk_footstep_planner
     perception_duration_ = perception_duration_ + (end_time  - start_time);
     return projected_footstep;
   }
-  
+
   bool FootstepGraph::projectGoal()
   {
     unsigned int error_state;
@@ -368,7 +368,7 @@ namespace jsk_footstep_planner
       return false;
     }
   }
-  
+
   bool FootstepGraph::projectStart()
   {
     unsigned int error_state;
@@ -391,7 +391,7 @@ namespace jsk_footstep_planner
     // best-first search
     return 0;
   }
-  
+
   double footstepHeuristicStraight(
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
   {
@@ -402,7 +402,7 @@ namespace jsk_footstep_planner
     Eigen::Vector3f goal_pos(goal->getPose().translation());
     return (std::abs((state_pos - goal_pos).norm() / graph->maxSuccessorDistance()));
   }
-  
+
   double footstepHeuristicStraightRotation(
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
   {
@@ -449,7 +449,7 @@ namespace jsk_footstep_planner
       second_theta = 2.0 * M_PI - second_theta;
     }
     //return (Eigen::Vector2f(diff_pos[0], diff_pos[1]).norm() / graph->maxSuccessorDistance()) + std::abs(diff_pos[2]) / 0.2 +
-    return (diff_pos.norm() / graph->maxSuccessorDistance()) + std::abs(diff_pos[2]) / 0.2 + 
+    return (diff_pos.norm() / graph->maxSuccessorDistance()) + std::abs(diff_pos[2]) / 0.2 +
       (first_theta * first_rotation_weight + second_theta * second_rotation_weight) / graph->maxSuccessorRotation();
   }
 
