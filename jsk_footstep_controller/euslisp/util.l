@@ -3,7 +3,7 @@
 
 (defun robot-interface-file (name)
   "You can get robot-interface file according to `name' argument.
-You can create `*ri*' like 
+You can create `*ri*' like
 (progn (load (robot-file (ros::get-param \"/robot/type\")))
        (init-robot-from-name (ros::get-param \"/robot/type\")))
 "
@@ -23,6 +23,8 @@ You can create `*ri*' like
       "package://hrpsys_ros_bridge_tutorials/euslisp/jaxon-interface.l")
      ((string= lower-name "jaxon_red")
       "package://hrpsys_ros_bridge_tutorials/euslisp/jaxon_red-interface.l")
+     ((string= lower-name "chidori")
+      "package://hrpsys_ros_bridge_tutorials/euslisp/chidori-interface.l")
      ((string= lower-name "urataleg")
       "package://hrpsys_ros_bridge_tutorials/euslisp/urataleg-interface.l")
      ((string= lower-name "samplerobot")
@@ -352,9 +354,9 @@ You can create `*ri*' like
           nil)))))
 
 (defun project-footsteps (planes footstep-coords)
-  (let (ret-coords projected-coords)    
+  (let (ret-coords projected-coords)
     (if planes
-        (progn 
+        (progn
           (setq projected-coords (mapcar #'(lambda (coords)
                                              (let* ((candidates (project-coords-on-to-plane2 coords planes (float-vector 0 0 1)))
                                                     (non-null-candidates (remove-if #'null candidates)) (ret nil))
@@ -381,7 +383,7 @@ You can create `*ri*' like
                                              )
                                          footstep-coords))
           (if (member nil projected-coords)
-              (progn 
+              (progn
                 (ros::ros-warn "footstep projection is failed")
                 (setq ret-coords footstep-coords))
             (progn
