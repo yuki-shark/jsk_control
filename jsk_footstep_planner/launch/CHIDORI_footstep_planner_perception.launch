@@ -12,9 +12,13 @@
   <arg name="use_footstep_controller" default="true" />
   <arg name="LAUNCH_TF_BUFFER_SERVER" default="true" />
   <arg name="USE_NORMAL" default="false" />
+  <arg name="use_laser_pointcloud" default="true" />
 
   <arg name="obstacle_cloud" default="/robot_center_pointcloud_bbox_clipped/output" />
-  <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" />
+  <!-- <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" /> -->
+  <!-- <arg name="point_cloud"    default="/extract_indices_target_label/output" if="$(arg use_laser_pointcloud)"/> -->
+  <arg name="point_cloud"    default="/tf_transform_cloud/output" if="$(arg use_laser_pointcloud)"/>
+  <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" unless="$(arg use_laser_pointcloud)"/>
 
   <arg if="$(arg use_octomap)"     name="input_obstacle_cloud"
        value="octomap_point_cloud_centers" />
@@ -24,6 +28,13 @@
        value="/footstep_normal_estimation/output_with_xyz" />
   <arg unless="$(arg USE_NORMAL)" name="input_point_cloud"
        value="$(arg point_cloud)" />
+
+  <!-- depth image creator -->
+  <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch">
+    <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" />
+    <arg name="use_laser_pointcloud" value="$(arg use_laser_pointcloud)" />
+    <arg name="rviz"                 value="false" />
+  </include>
 
   <!-- footstep planner -->
   <node pkg="jsk_footstep_planner" type="footstep_planner_node"
@@ -245,7 +256,9 @@
 
   <include file="$(find jsk_footstep_planner)/launch/footstep_plane_detection.launch" if="$(arg use_footstep_plane_detection)">
     <arg name="input_cloud" value="$(arg point_cloud)" />
-    <arg name="fixed_frame_id" value="map" />
+    <!-- <arg name="fixed_frame_id" value="map" /> -->
+    <arg name="fixed_frame_id" value="static_virtual_camera" if="$(arg use_laser_pointcloud)" />
+    <arg name="fixed_frame_id" value="map" unless="$(arg use_laser_pointcloud)" />
   </include>
 
   <include file="$(find jsk_footstep_controller)/launch/floor_detection.launch" if="$(arg use_floor_detection)">
