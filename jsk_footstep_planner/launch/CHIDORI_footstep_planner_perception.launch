@@ -12,13 +12,10 @@
   <arg name="use_footstep_controller" default="true" />
   <arg name="LAUNCH_TF_BUFFER_SERVER" default="true" />
   <arg name="USE_NORMAL" default="false" />
-  <arg name="use_laser_pointcloud" default="true" />
+  <arg name="use_laser_pointcloud" default="false" />
 
   <arg name="obstacle_cloud" default="/robot_center_pointcloud_bbox_clipped/output" />
-  <!-- <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" /> -->
-  <!-- <arg name="point_cloud"    default="/extract_indices_target_label/output" if="$(arg use_laser_pointcloud)"/> -->
-  <arg name="point_cloud"    default="/tf_transform_cloud/output" if="$(arg use_laser_pointcloud)"/>
-  <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" unless="$(arg use_laser_pointcloud)"/>
+  <arg name="point_cloud"    default="/tf_transform_cloud/output" />
 
   <arg if="$(arg use_octomap)"     name="input_obstacle_cloud"
        value="octomap_point_cloud_centers" />
