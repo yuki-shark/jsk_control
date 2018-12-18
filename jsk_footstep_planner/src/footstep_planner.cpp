@@ -93,6 +93,8 @@ namespace jsk_footstep_planner
     }
     sub_pointcloud_model_ = nh.subscribe("pointcloud_model", 1, &FootstepPlanner::pointcloudCallback, this);
     sub_obstacle_model_ = nh.subscribe("obstacle_model", 1, &FootstepPlanner::obstacleCallback, this);
+    sub_label_image_ = nh.subscribe("label_image", 1, &FootstepPlanner::labelImageCallback, this);
+    sub_label_info_ = nh.subscribe("label_info", 1, &FootstepPlanner::labelInfoCallback, this);
     std::vector<double> collision_bbox_size, collision_bbox_offset;
     if (jsk_topic_tools::readVectorParameter(nh, "collision_bbox_size", collision_bbox_size)) {
       collision_bbox_size_[0] = collision_bbox_size[0];
@@ -118,7 +120,7 @@ namespace jsk_footstep_planner
       graph_->setObstacleModel(obstacle_model_);
     }
   }
-  
+
   void FootstepPlanner::pointcloudCallback(
     const sensor_msgs::PointCloud2::ConstPtr& msg)
   {
@@ -129,6 +131,42 @@ namespace jsk_footstep_planner
     pointcloud_model_frame_id_ = msg->header.frame_id;
     if (graph_ && use_pointcloud_model_) {
       graph_->setPointCloudModel(pointcloud_model_);
+    }
+  }
+
+  // callback function for label image
+  void FootstepPlanner::labelImageCallback(
+      const sensor_msgs::Image::ConstPtr& msg)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    ROS_DEBUG("label image is updated");
+    label_image_.reset(new cv_bridge::CvImage);
+    try
+    {
+      bool use_label_image_ = true;
+      // label_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32SC1);
+      label_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+      if (graph_ && use_label_image_) {
+        graph_->setLabelImage(label_image_);
+      }
+    }
+    catch (cv_bridge::Exception& e)
+    {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+    }
+  }
+
+  void FootstepPlanner::labelInfoCallback(
+      const sensor_msgs::CameraInfo::ConstPtr& msg)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    ROS_DEBUG("label info is updated");
+    label_info_.reset(new sensor_msgs::CameraInfo);
+    *label_info_ = *msg;
+    bool use_label_info_ = true; // should be modified
+    if (graph_ && use_label_info_) {
+      graph_->setLabelInfo(label_info_);
     }
   }
 
@@ -171,7 +209,7 @@ namespace jsk_footstep_planner
     tf::poseEigenToMsg(mid, pose);
     return true;
   }
-  
+
   bool FootstepPlanner::projectFootPrintWithLocalSearchService(
     jsk_interactive_marker::SnapFootPrint::Request& req,
     jsk_interactive_marker::SnapFootPrint::Response& res)
@@ -602,8 +640,18 @@ namespace jsk_footstep_planner
     graph_->setParameters(parameters_);
 
     graph_->setSuccessorFunction(boost::bind(&FootstepGraph::successors_original, graph_, _1, _2));
-    graph_->setPathCostFunction(boost::bind(&FootstepGraph::path_cost_original, graph_, _1, _2, _3));
 
+    if (cost_ == "original") {
+      graph_->setPathCostFunction(boost::bind(&FootstepGraph::path_cost_original, graph_, _1, _2, _3));
+    }
+    else if (cost_ == "safety") {
+      graph_->setPathCostFunction(boost::bind(&FootstepGraph::path_cost_safety, graph_, _1, _2, _3));
+    }
+    else {
+      ROS_ERROR("Unknown costs");
+      as_.setPreempted();
+      return;
+    }
     //ROS_INFO_STREAM(graph_->infoString());
     // Solver setup
     FootstepAStarSolver<FootstepGraph> solver(graph_,
@@ -749,7 +797,7 @@ namespace jsk_footstep_planner
       publishPointCloud(open_list_cloud, pub_open_list_, latest_header_);
     }
   }
-  
+
   double FootstepPlanner::stepCostHeuristic(
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
   {
@@ -956,6 +1004,7 @@ namespace jsk_footstep_planner
     close_list_theta_num_ = config.close_list_theta_num;
     profile_period_ = config.profile_period;
     heuristic_ = config.heuristic;
+    cost_ = config.cost;
     heuristic_first_rotation_weight_ = config.heuristic_first_rotation_weight;
     heuristic_second_rotation_weight_ = config.heuristic_second_rotation_weight;
     cost_weight_ = config.cost_weight;
@@ -972,7 +1021,7 @@ namespace jsk_footstep_planner
       }
     }
   }
-  
+
   void FootstepPlanner::buildGraph()
   {
     graph_.reset(new FootstepGraph(Eigen::Vector3f(resolution_x_,

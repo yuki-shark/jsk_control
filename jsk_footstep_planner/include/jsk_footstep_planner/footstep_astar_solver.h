@@ -96,7 +96,7 @@ namespace jsk_footstep_planner
           unsigned int error_state;
           StatePtr projected_state;
           // if (target_node->getGeneration() < 10) {
-          if (target_node->getGeneration() < 6) {
+          if (target_node->getGeneration() < 2) {
             projected_state = target_node->getState();
           } else {
             projected_state = graph_->projectFootstep(target_node->getState(),
@@ -112,7 +112,7 @@ namespace jsk_footstep_planner
                 for (int i = 0; i < states_candidates.size(); i ++) {
                   StatePtr tmp_state;
                   // if (target_node->getGeneration() < 10) {
-                  if (target_node->getGeneration() < 6) {
+                  if (target_node->getGeneration() < 2) {
                     tmp_state = states_candidates[i];
                   } else {
                     tmp_state = graph_->projectFootstep(states_candidates[i],
@@ -163,10 +163,10 @@ namespace jsk_footstep_planner
         else if (!findInCloseList(target_node->getState())) {
           addToCloseList(target_node->getState());
           // if (target_node->getGeneration() < 10) graph_->setIgnoreProjection(true);
-          if (target_node->getGeneration() < 6) graph_->setIgnoreProjection(true);
+          if (target_node->getGeneration() < 2) graph_->setIgnoreProjection(true);
           std::vector<SolverNodePtr> next_nodes = target_node->expand(target_node, verbose_);
           // if (target_node->getGeneration() < 10) graph_->setIgnoreProjection(false);
-          if (target_node->getGeneration() < 6) graph_->setIgnoreProjection(false);
+          if (target_node->getGeneration() < 2) graph_->setIgnoreProjection(false);
 
           // Add to open list only if next_nodes is not in close list.
           // We can do it thanks to FootstepStateDiscreteCloseList

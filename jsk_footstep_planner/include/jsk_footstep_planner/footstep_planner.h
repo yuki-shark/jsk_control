@@ -48,6 +48,11 @@
 #include <dynamic_reconfigure/server.h>
 #include <jsk_rviz_plugins/OverlayText.h>
 
+// label image processing
+#include <sensor_msgs/Image.h>
+#include <sensor_msgs/CameraInfo.h>
+#include <cv_bridge/cv_bridge.h>
+
 // footstep planning
 #include "jsk_footstep_planner/footstep_graph.h"
 #include "jsk_footstep_planner/astar_solver.h"
@@ -81,9 +86,11 @@ namespace jsk_footstep_planner
 
     // Initialization
     virtual bool readSuccessors(ros::NodeHandle& nh);
-    
+
     virtual void pointcloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
     virtual void obstacleCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+    virtual void labelImageCallback(const sensor_msgs::Image::ConstPtr& msg);
+    virtual void labelInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
     virtual void planCB(const jsk_footstep_msgs::PlanFootstepsGoal::ConstPtr& goal);
 
     // buildGraph is not thread safe, it is responsible for caller to take care
@@ -141,6 +148,8 @@ namespace jsk_footstep_planner
     ros::Publisher pub_text_;
     ros::Subscriber sub_pointcloud_model_;
     ros::Subscriber sub_obstacle_model_;
+    ros::Subscriber sub_label_image_;
+    ros::Subscriber sub_label_info_;
     ros::ServiceServer srv_project_footprint_;
     ros::ServiceServer srv_project_footprint_with_local_search_;
     ros::ServiceServer srv_collision_bounding_box_info_;
@@ -148,6 +157,8 @@ namespace jsk_footstep_planner
     ros::ServiceServer srv_set_heuristic_path_;
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
+    cv_bridge::CvImagePtr label_image_;
+    sensor_msgs::CameraInfo::Ptr label_info_;
     FootstepGraph::Ptr graph_;
     std::vector<Eigen::Affine3f> successors_;
     Eigen::Vector3f collision_bbox_size_;
@@ -178,13 +189,14 @@ namespace jsk_footstep_planner
     std::string heuristic_;
     double heuristic_first_rotation_weight_;
     double heuristic_second_rotation_weight_;
+    std::string cost_;
     double cost_weight_;
     double heuristic_weight_;
     std::string pointcloud_model_frame_id_, obstacle_model_frame_id_;
     double planning_timeout_;
 
   private:
-    
+
   };
 }
 

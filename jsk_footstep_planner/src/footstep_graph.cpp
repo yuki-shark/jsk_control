@@ -385,6 +385,63 @@ namespace jsk_footstep_planner
     return false;
   }
 
+  double FootstepGraph::get_safety_cost(
+    StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info)
+  {
+    tf::StampedTransform transform;
+    try {
+      // coords transform from "map" to "static_virtual_camera"
+      listener.lookupTransform("map", "static_virtual_camera", ros::Time(0), transform);
+      Eigen::Affine3f to_pose_ = to->getPose();
+      tf::Vector3 original_coords;
+      original_coords.setValue(to_pose_.translation()[0],
+                               to_pose_.translation()[1],
+                               to_pose_.translation()[2]);
+      tf::Vector3 translation_vector = transform.getOrigin();
+      tf::Matrix3x3 rotation_matrix = transform.getBasis();
+      tf::Vector3 target_coords;
+      target_coords = rotation_matrix.inverse() * (original_coords - translation_vector);
+
+      // calculate fov from camera info
+      float fx = label_info->K[0];
+      float fy = label_info->K[4];
+      int image_width  = label_info->width;
+      int image_height = label_info->height;
+      double fovx = 2 * std::atan(image_width /(2*fx));
+      double fovy = 2 * std::atan(image_height/(2*fy));
+
+      // convert target coords to image pixel
+      double fov_width  = 2 * target_coords.z() * std::tan(fovx/2);
+      double fov_height = 2 * target_coords.z() * std::tan(fovy/2);
+      int center_u = (target_coords.x() + fov_width /2) / fov_width  * image_width;
+      int center_v = (target_coords.y() + fov_height/2) / fov_height * image_height;
+
+      // get maximum of footfold safety
+      float foot_size = 0.26; // should be modifid
+      int radius = (foot_size / fov_width * image_width) / 2;
+      int left_u   = std::max(center_u - radius    , 0           );
+      int right_u  = std::min(center_u + radius + 1, image_width );
+      int top_v    = std::max(center_v - radius    , 0           );
+      int bottom_v = std::min(center_v + radius + 1, image_height);
+      int max_cost = 0;
+      for (int i=top_v; i<bottom_v; i++) {
+        for (int j=left_u; j<right_u; j++) {
+          if (int(label_image->image.data[i * image_width + j]) > max_cost) {
+            max_cost = int(label_image->image.data[(i * image_width + j)]);
+          }
+        }
+      }
+      double safety_cost = double(max_cost);
+
+      return safety_cost;
+    }
+    catch (tf::TransformException ex){
+      ROS_ERROR("%s",ex.what());
+      ros::Duration(1.0).sleep();
+      return 0;
+    }
+  }
+
   double footstepHeuristicZero(
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
   {

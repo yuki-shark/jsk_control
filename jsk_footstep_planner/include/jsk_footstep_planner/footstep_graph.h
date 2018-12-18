@@ -39,6 +39,8 @@
 
 #include <ros/ros.h>
 #include <pcl_ros/point_cloud.h>
+#include <tf/transform_listener.h>
+#include <cv_bridge/cv_bridge.h>
 #include <jsk_footstep_msgs/FootstepArray.h>
 
 #include "jsk_recognition_utils/geo_util.h"
@@ -195,6 +197,16 @@ namespace jsk_footstep_planner
       obstacle_tree_model_->setInputCloud(obstacle_model_);
     }
 
+    virtual void setLabelImage(cv_bridge::CvImage::Ptr image)
+    {
+      label_image_ = image;
+    }
+
+    virtual void setLabelInfo(sensor_msgs::CameraInfo::Ptr info)
+    {
+      label_info_ = info;
+    }
+
     virtual bool projectGoal();
     virtual bool projectStart();
     virtual bool isSuccessable(StatePtr current_state, StatePtr previous_state);
@@ -227,6 +239,14 @@ namespace jsk_footstep_planner
       // path cost is a number of steps
       return prev_cost + 1;
     }
+    double path_cost_safety (StatePtr from, StatePtr to, double prev_cost) {
+        // add safety cost to number of steps
+        double safety_cost = get_safety_cost(to, label_image_, label_info_);
+        return prev_cost + 1 + safety_cost;
+    }
+
+    double get_safety_cost(StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info);
+
     void setHeuristicPathLine(jsk_recognition_utils::PolyLine &path_line)
     {
       heuristic_path_.reset(new jsk_recognition_utils::PolyLine(path_line)); // copy ???
@@ -247,6 +267,10 @@ namespace jsk_footstep_planner
     std::vector<Eigen::Affine3f> successors_from_right_to_left_;
     FootstepState::Ptr left_goal_state_;
     FootstepState::Ptr right_goal_state_;
+    // sensor_msgs::Image::Ptr label_image_;
+    cv_bridge::CvImage::Ptr label_image_;
+    sensor_msgs::CameraInfo::Ptr label_info_;
+    tf::TransformListener listener;
     /**
      * @brief
      * zero_state is used only for global transition limit
