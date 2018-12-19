@@ -316,6 +316,8 @@ namespace jsk_footstep_planner
     double second_rotation_weight);
   double footstepHeuristicFollowPathLine(
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph);
+  double footstepHeuristicStepSafety(
+    SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph);
 }
 
 #endif

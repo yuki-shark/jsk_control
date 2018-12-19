@@ -560,4 +560,11 @@ namespace jsk_footstep_planner
     //return step_cost + follow_cost + (4.0 * goal_foot_rot_cost) + (0.5 * path_foot_rot_cost);
     return 2*(step_cost + follow_cost + (0.5 * path_foot_rot_cost));
   }
+
+  double footstepHeuristicStepSafety(
+    SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
+  {
+
+    return 0;
+  }
 }

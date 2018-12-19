@@ -676,6 +676,9 @@ namespace jsk_footstep_planner
     else if (heuristic_ == "follow_path") {
       solver.setHeuristic(boost::bind(&FootstepPlanner::followPathLineHeuristic, this, _1, _2));
     }
+    else if (heuristic_ == "step_safety") {
+      solver.setHeuristic(boost::bind(&FootstepPlanner::stepSafetyHeuristic, this, _1, _2));
+    }
     else {
       ROS_ERROR("Unknown heuristics");
       as_.setPreempted();
@@ -827,6 +830,12 @@ namespace jsk_footstep_planner
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
   {
     return footstepHeuristicFollowPathLine(node, graph);
+  }
+
+  double FootstepPlanner::stepSafetyHeuristic(
+    SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
+  {
+    return footstepHeuristicStepSafety(node, graph);
   }
 
   /**

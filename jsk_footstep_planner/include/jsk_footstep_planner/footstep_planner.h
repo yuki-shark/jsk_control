@@ -109,6 +109,8 @@ namespace jsk_footstep_planner
       SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph);
     virtual double followPathLineHeuristic(
       SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph);
+    virtual double stepSafetyHeuristic(
+      SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph);
     virtual void profile(FootstepAStarSolver<FootstepGraph>& solver, FootstepGraph::Ptr graph);
     virtual void publishPointCloud(
       const pcl::PointCloud<pcl::PointNormal>& cloud,
