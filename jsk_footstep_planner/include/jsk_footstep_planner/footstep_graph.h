@@ -240,12 +240,18 @@ namespace jsk_footstep_planner
       return prev_cost + 1;
     }
     double path_cost_safety (StatePtr from, StatePtr to, double prev_cost) {
-        // add safety cost to number of steps
-        double safety_cost = get_safety_cost(to, label_image_, label_info_);
-        return prev_cost + 1 + safety_cost;
+      // add safety cost to number of steps
+      Eigen::Affine3f to_pose_ = to->getPose();
+      Eigen::Vector3f original(to_pose_.translation()[0],
+                                      to_pose_.translation()[1],
+                                      to_pose_.translation()[2]);
+      // double safety_cost = get_safety_cost(to, label_image_, label_info_);
+      double safety_cost = get_safety_cost(original, label_image_, label_info_);
+      return prev_cost + 1 + safety_cost;
     }
 
-    double get_safety_cost(StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info);
+    // double get_safety_cost(StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info);
+    double get_safety_cost(Eigen::Vector3f original, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info);
 
     void setHeuristicPathLine(jsk_recognition_utils::PolyLine &path_line)
     {

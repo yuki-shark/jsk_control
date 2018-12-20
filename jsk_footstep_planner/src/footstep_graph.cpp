@@ -385,18 +385,24 @@ namespace jsk_footstep_planner
     return false;
   }
 
+  // double FootstepGraph::get_safety_cost(
+  //   StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info)
+  // {
   double FootstepGraph::get_safety_cost(
-    StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info)
+    Eigen::Vector3f original, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info)
   {
     tf::StampedTransform transform;
     try {
       // coords transform from "map" to "static_virtual_camera"
       listener.lookupTransform("map", "static_virtual_camera", ros::Time(0), transform);
-      Eigen::Affine3f to_pose_ = to->getPose();
+      // Eigen::Affine3f to_pose_ = to->getPose();
       tf::Vector3 original_coords;
-      original_coords.setValue(to_pose_.translation()[0],
-                               to_pose_.translation()[1],
-                               to_pose_.translation()[2]);
+      // original_coords.setValue(to_pose_.translation()[0],
+      //                          to_pose_.translation()[1],
+      //                          to_pose_.translation()[2]);
+      original_coords.setValue(original.x(),
+                               original.y(),
+                               original.z());
       tf::Vector3 translation_vector = transform.getOrigin();
       tf::Matrix3x3 rotation_matrix = transform.getBasis();
       tf::Vector3 target_coords;
