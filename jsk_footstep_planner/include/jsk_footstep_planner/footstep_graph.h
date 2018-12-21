@@ -207,6 +207,9 @@ namespace jsk_footstep_planner
       label_info_ = info;
     }
 
+    virtual cv_bridge::CvImage::Ptr getLabelImage() { return label_image_; }
+    virtual sensor_msgs::CameraInfo::Ptr getLabelInfo() { return label_info_; }
+
     virtual bool projectGoal();
     virtual bool projectStart();
     virtual bool isSuccessable(StatePtr current_state, StatePtr previous_state);

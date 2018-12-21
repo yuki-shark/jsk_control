@@ -395,11 +395,7 @@ namespace jsk_footstep_planner
     try {
       // coords transform from "map" to "static_virtual_camera"
       listener.lookupTransform("map", "static_virtual_camera", ros::Time(0), transform);
-      // Eigen::Affine3f to_pose_ = to->getPose();
       tf::Vector3 original_coords;
-      // original_coords.setValue(to_pose_.translation()[0],
-      //                          to_pose_.translation()[1],
-      //                          to_pose_.translation()[2]);
       original_coords.setValue(original.x(),
                                original.y(),
                                original.z());
@@ -570,7 +566,24 @@ namespace jsk_footstep_planner
   double footstepHeuristicStepSafety(
     SolverNode<FootstepState, FootstepGraph>::Ptr node, FootstepGraph::Ptr graph)
   {
+    // calculate step cost
+    FootstepState::Ptr state = node->getState();
+    FootstepState::Ptr goal = graph->getGoal(state->getLeg());
+    Eigen::Vector3f start_pos(state->getPose().translation());
+    Eigen::Vector3f goal_pos(goal->getPose().translation());
+    Eigen::Vector3f diff_pos(goal_pos - start_pos);
+    diff_pos[2] = 0.0;          // Ignore z distance
+    double step_cost = diff_pos.norm() / graph->maxSuccessorDistance();
 
-    return 0;
+    // calculate safety cost
+    double safety_cost;
+    Eigen::Vector3f target;
+    Eigen::Vector3f step_vector = diff_pos / graph->maxSuccessorDistance();
+    for (int step=1; step <= step_cost; step++) {
+      target = start_pos + step_vector * step;
+      safety_cost += graph->get_safety_cost(target, graph->getLabelImage(), graph->getLabelInfo());
+    }
+
+    return step_cost + safety_cost;
   }
 }
