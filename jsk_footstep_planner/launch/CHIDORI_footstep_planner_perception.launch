@@ -29,6 +29,8 @@
   <arg unless="$(arg USE_NORMAL)" name="input_point_cloud"
        value="$(arg point_cloud)" />
 
+  <env name="ROBOT" value="CHIDORI" />
+
   <!-- depth image creator -->
   <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch">
     <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" />
@@ -38,10 +40,10 @@
 
   <include file="$(find safe_footstep_planner)/launch/color_labeling.launch">
     <arg name="INPUT_IMAGE"   value="/depth_image_creator/output_image" />
-    <arg name="RED_WEIGHT"    value="0" />
+    <arg name="RED_WEIGHT"    value="3" />
     <arg name="GREEN_WEIGHT"  value="0" />
     <arg name="BLUE_WEIGHT"   value="0" />
-    <arg name="YELLOW_WEIGHT" value="3" />
+    <arg name="YELLOW_WEIGHT" value="10" />
   </include>
 
   <!-- footstep planner -->
@@ -116,7 +118,7 @@
     </rosparam>
     <!-- limitation of steps -->
     <rosparam>
-      use_transision_limit: false
+      use_transition_limit: false
       transition_limit_x: 0.5
       transition_limit_y: 0.35
       transition_limit_z: 0.4
@@ -277,6 +279,7 @@
 
   <node pkg="rviz" type="rviz" name="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_footstep_planner_perception.rviz"
+        respawn="true"
         if="$(arg rviz)"/>
 
   <node pkg="tf2_ros" type="buffer_server" name="tf2_buffer_server"
