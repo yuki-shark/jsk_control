@@ -17,7 +17,7 @@
   <arg name="obstacle_cloud" default="/robot_center_pointcloud_bbox_clipped/output" />
   <arg name="point_cloud"    default="/tf_transform_cloud/output" />
   <!-- <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" /> -->
-  <arg name="input_label_image"    default="/label_image" />
+  <arg name="input_label_image"    default="/cost_image" />
   <arg name="input_label_info"    default="/static_virtual_camera/camera_info" />
 
   <arg if="$(arg use_octomap)"     name="input_obstacle_cloud"
@@ -40,10 +40,10 @@
 
   <include file="$(find safe_footstep_planner)/launch/color_labeling.launch">
     <arg name="INPUT_IMAGE"   value="/depth_image_creator/output_image" />
-    <arg name="RED_WEIGHT"    value="3" />
-    <arg name="GREEN_WEIGHT"  value="0" />
-    <arg name="BLUE_WEIGHT"   value="0" />
-    <arg name="YELLOW_WEIGHT" value="10" />
+    <arg name="RED_LABEL"    value="1" />
+    <arg name="GREEN_LABEL"  value="2" />
+    <arg name="BLUE_LABEL"   value="3" />
+    <arg name="YELLOW_LABEL" value="4" />
   </include>
 
   <!-- footstep planner -->
