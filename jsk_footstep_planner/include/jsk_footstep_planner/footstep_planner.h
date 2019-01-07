@@ -141,6 +141,9 @@ namespace jsk_footstep_planner
     virtual void publishText(ros::Publisher& pub,
                              const std::string& text,
                              PlanningStatus status);
+    virtual double getLabel(Eigen::Vector3f original,
+                          cv_bridge::CvImage::Ptr label_image,
+                          sensor_msgs::CameraInfo::Ptr cost_info);
 
     boost::mutex mutex_;
     actionlib::SimpleActionServer<jsk_footstep_msgs::PlanFootstepsAction> as_;
@@ -171,6 +174,7 @@ namespace jsk_footstep_planner
     Eigen::Vector3f inv_lleg_footstep_offset_;
     Eigen::Vector3f inv_rleg_footstep_offset_;
     std_msgs::Header latest_header_;
+    tf::TransformListener listener_;
     // Common Parameters
     FootstepParameters parameters_;
 

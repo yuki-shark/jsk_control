@@ -469,6 +469,67 @@ namespace jsk_footstep_planner
     pub.publish(msg);
   }
 
+  double FootstepPlanner::getLabel(
+    Eigen::Vector3f original, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr cost_info)
+  {
+    tf::StampedTransform transform;
+    try {
+      // coords transform from "map" to "static_virtual_camera"
+      listener_.lookupTransform("map", "static_virtual_camera", ros::Time(0), transform);
+      tf::Vector3 original_coords;
+      original_coords.setValue(original.x(),
+                               original.y(),
+                               original.z());
+      tf::Vector3 translation_vector = transform.getOrigin();
+      tf::Matrix3x3 rotation_matrix = transform.getBasis();
+      tf::Vector3 target_coords;
+      target_coords = rotation_matrix.inverse() * (original_coords - translation_vector);
+
+      // calculate fov from camera info
+      float fx = cost_info->K[0];
+      float fy = cost_info->K[4];
+      int image_width  = cost_info->width;
+      int image_height = cost_info->height;
+      double fovx = 2 * std::atan(image_width /(2*fx));
+      double fovy = 2 * std::atan(image_height/(2*fy));
+
+      // convert target coords to image pixel
+      double fov_width  = 2 * target_coords.z() * std::tan(fovx/2);
+      double fov_height = 2 * target_coords.z() * std::tan(fovy/2);
+      int center_u = (target_coords.x() + fov_width /2) / fov_width  * image_width;
+      int center_v = (target_coords.y() + fov_height/2) / fov_height * image_height;
+
+      // get label
+      float foot_size = 0.26; // should be modifid
+      int radius = (foot_size / fov_width * image_width) / 2;
+      int left_u   = std::max(center_u - radius    , 0           );
+      int right_u  = std::min(center_u + radius + 1, image_width );
+      int top_v    = std::max(center_v - radius    , 0           );
+      int bottom_v = std::min(center_v + radius + 1, image_height);
+      int label_size = 100;
+      std::vector<int> label_list(label_size, 0);
+      for (int i=top_v; i<bottom_v; i++) {
+        for (int j=left_u; j<right_u; j++) {
+          label_list.at(label_image->image.data[i * image_width + j])++;
+        }
+      }
+      int label;
+      if (label_list.at(0) == std::pow((radius*2 + 1), 2)) {
+        label = 0;
+      }
+      else {
+        // std::cout << label_list.at(0) << " " << label_list.at(1) << " " << label_list.at(2) << " " << label_list.at(3) << " " << label_list.at(4) << std::endl;
+        label = std::distance(label_list.begin(), std::max_element(label_list.begin() + 1, label_list.end()));
+      }
+      return double(label);
+    }
+    catch (tf::TransformException ex){
+      ROS_ERROR("%s",ex.what());
+      ros::Duration(1.0).sleep();
+      return 0;
+    }
+  }
+
   void FootstepPlanner::planCB(
     const jsk_footstep_msgs::PlanFootstepsGoal::ConstPtr& goal)
   {
@@ -741,6 +802,24 @@ namespace jsk_footstep_planner
       as_.setPreempted();
       return;
     }
+    // check unknown foothold
+    std::cout << "============================================" << std::endl;
+    for (int i = 0; i < path.size(); i++) {
+        FootstepState::Ptr state = path.at(i)->getState();
+        Eigen::Affine3f state_pose_ = state->getPose();
+        Eigen::Vector3f original(state_pose_.translation()[0],
+                                 state_pose_.translation()[1],
+                                 state_pose_.translation()[2]);
+        double label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
+        std::cout << "step : " << i + 1 << "  label : " << label << std::endl;
+        if (label == 4) {
+          std::vector<SolverNode<FootstepState, FootstepGraph>::Ptr> tmp_path(path.begin(), path.begin() + i);
+          path = tmp_path;
+          break;
+        }
+    }
+    std::cout << "============================================" << std::endl;
+
     // finalize in graph
     std::vector <FootstepState::Ptr> finalizeSteps;
     if (! (graph_->finalizeSteps((path.size() >1 ? path[path.size()-2]->getState() : FootstepState::Ptr()),
