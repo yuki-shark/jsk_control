@@ -202,13 +202,19 @@ namespace jsk_footstep_planner
       label_image_ = image;
     }
 
-    virtual void setLabelInfo(sensor_msgs::CameraInfo::Ptr info)
+    virtual void setCostImage(cv_bridge::CvImage::Ptr image)
     {
-      label_info_ = info;
+      cost_image_ = image;
+    }
+
+    virtual void setCostInfo(sensor_msgs::CameraInfo::Ptr info)
+    {
+      cost_info_ = info;
     }
 
     virtual cv_bridge::CvImage::Ptr getLabelImage() { return label_image_; }
-    virtual sensor_msgs::CameraInfo::Ptr getLabelInfo() { return label_info_; }
+    virtual cv_bridge::CvImage::Ptr getCostImage() { return cost_image_; }
+    virtual sensor_msgs::CameraInfo::Ptr getCostInfo() { return cost_info_; }
 
     virtual bool projectGoal();
     virtual bool projectStart();
@@ -248,13 +254,13 @@ namespace jsk_footstep_planner
       Eigen::Vector3f original(to_pose_.translation()[0],
                                       to_pose_.translation()[1],
                                       to_pose_.translation()[2]);
-      // double safety_cost = get_safety_cost(to, label_image_, label_info_);
-      double safety_cost = get_safety_cost(original, label_image_, label_info_);
+      // double safety_cost = get_safety_cost(to, cost_image_, cost_info_);
+      double safety_cost = get_safety_cost(original, cost_image_, cost_info_);
       return prev_cost + 1 + safety_cost;
     }
 
-    // double get_safety_cost(StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info);
-    double get_safety_cost(Eigen::Vector3f original, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info);
+    // double get_safety_cost(StatePtr to, cv_bridge::CvImage::Ptr cost_image, sensor_msgs::CameraInfo::Ptr cost_info);
+    double get_safety_cost(Eigen::Vector3f original, cv_bridge::CvImage::Ptr cost_image, sensor_msgs::CameraInfo::Ptr cost_info);
 
     void setHeuristicPathLine(jsk_recognition_utils::PolyLine &path_line)
     {
@@ -276,9 +282,9 @@ namespace jsk_footstep_planner
     std::vector<Eigen::Affine3f> successors_from_right_to_left_;
     FootstepState::Ptr left_goal_state_;
     FootstepState::Ptr right_goal_state_;
-    // sensor_msgs::Image::Ptr label_image_;
     cv_bridge::CvImage::Ptr label_image_;
-    sensor_msgs::CameraInfo::Ptr label_info_;
+    cv_bridge::CvImage::Ptr cost_image_;
+    sensor_msgs::CameraInfo::Ptr cost_info_;
     tf::TransformListener listener;
     /**
      * @brief

@@ -385,11 +385,8 @@ namespace jsk_footstep_planner
     return false;
   }
 
-  // double FootstepGraph::get_safety_cost(
-  //   StatePtr to, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info)
-  // {
   double FootstepGraph::get_safety_cost(
-    Eigen::Vector3f original, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr label_info)
+    Eigen::Vector3f original, cv_bridge::CvImage::Ptr cost_image, sensor_msgs::CameraInfo::Ptr cost_info)
   {
     tf::StampedTransform transform;
     try {
@@ -405,10 +402,10 @@ namespace jsk_footstep_planner
       target_coords = rotation_matrix.inverse() * (original_coords - translation_vector);
 
       // calculate fov from camera info
-      float fx = label_info->K[0];
-      float fy = label_info->K[4];
-      int image_width  = label_info->width;
-      int image_height = label_info->height;
+      float fx = cost_info->K[0];
+      float fy = cost_info->K[4];
+      int image_width  = cost_info->width;
+      int image_height = cost_info->height;
       double fovx = 2 * std::atan(image_width /(2*fx));
       double fovy = 2 * std::atan(image_height/(2*fy));
 
@@ -428,8 +425,8 @@ namespace jsk_footstep_planner
       int max_cost = 0;
       for (int i=top_v; i<bottom_v; i++) {
         for (int j=left_u; j<right_u; j++) {
-          if (int(label_image->image.data[i * image_width + j]) > max_cost) {
-            max_cost = int(label_image->image.data[(i * image_width + j)]);
+          if (int(cost_image->image.data[i * image_width + j]) > max_cost) {
+            max_cost = int(cost_image->image.data[(i * image_width + j)]);
           }
         }
       }
@@ -581,7 +578,7 @@ namespace jsk_footstep_planner
     Eigen::Vector3f step_vector = diff_pos / graph->maxSuccessorDistance();
     for (int step=1; step <= step_cost; step++) {
       target = start_pos + step_vector * step;
-      safety_cost += graph->get_safety_cost(target, graph->getLabelImage(), graph->getLabelInfo());
+      safety_cost += graph->get_safety_cost(target, graph->getCostImage(), graph->getCostInfo());
     }
 
     return step_cost + safety_cost;

@@ -94,7 +94,8 @@ namespace jsk_footstep_planner
     sub_pointcloud_model_ = nh.subscribe("pointcloud_model", 1, &FootstepPlanner::pointcloudCallback, this);
     sub_obstacle_model_ = nh.subscribe("obstacle_model", 1, &FootstepPlanner::obstacleCallback, this);
     sub_label_image_ = nh.subscribe("label_image", 1, &FootstepPlanner::labelImageCallback, this);
-    sub_label_info_ = nh.subscribe("label_info", 1, &FootstepPlanner::labelInfoCallback, this);
+    sub_cost_image_ = nh.subscribe("cost_image", 1, &FootstepPlanner::costImageCallback, this);
+    sub_cost_info_ = nh.subscribe("cost_info", 1, &FootstepPlanner::costInfoCallback, this);
     std::vector<double> collision_bbox_size, collision_bbox_offset;
     if (jsk_topic_tools::readVectorParameter(nh, "collision_bbox_size", collision_bbox_size)) {
       collision_bbox_size_[0] = collision_bbox_size[0];
@@ -157,16 +158,39 @@ namespace jsk_footstep_planner
     }
   }
 
-  void FootstepPlanner::labelInfoCallback(
+  // callback function for cost image
+  void FootstepPlanner::costImageCallback(
+      const sensor_msgs::Image::ConstPtr& msg)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    ROS_DEBUG("cost image is updated");
+    cost_image_.reset(new cv_bridge::CvImage);
+    try
+    {
+      bool use_cost_image_ = true;
+      // cost_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32SC1);
+      cost_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+      if (graph_ && use_cost_image_) {
+        graph_->setCostImage(cost_image_);
+      }
+    }
+    catch (cv_bridge::Exception& e)
+    {
+      ROS_ERROR("cv_bridge exception: %s", e.what());
+      return;
+    }
+  }
+
+  void FootstepPlanner::costInfoCallback(
       const sensor_msgs::CameraInfo::ConstPtr& msg)
   {
     boost::mutex::scoped_lock lock(mutex_);
-    ROS_DEBUG("label info is updated");
-    label_info_.reset(new sensor_msgs::CameraInfo);
-    *label_info_ = *msg;
-    bool use_label_info_ = true; // should be modified
-    if (graph_ && use_label_info_) {
-      graph_->setLabelInfo(label_info_);
+    ROS_DEBUG("cost info is updated");
+    cost_info_.reset(new sensor_msgs::CameraInfo);
+    *cost_info_ = *msg;
+    bool use_cost_info_ = true; // should be modified
+    if (graph_ && use_cost_info_) {
+      graph_->setCostInfo(cost_info_);
     }
   }
 

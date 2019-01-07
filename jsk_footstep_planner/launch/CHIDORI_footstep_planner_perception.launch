@@ -17,8 +17,9 @@
   <arg name="obstacle_cloud" default="/robot_center_pointcloud_bbox_clipped/output" />
   <arg name="point_cloud"    default="/tf_transform_cloud/output" />
   <!-- <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" /> -->
-  <arg name="input_label_image"    default="/cost_image" />
-  <arg name="input_label_info"    default="/static_virtual_camera/camera_info" />
+  <arg name="input_label_image" default="/label_image" />
+  <arg name="input_cost_image"  default="/cost_image" />
+  <arg name="input_cost_info"   default="/static_virtual_camera/camera_info" />
 
   <arg if="$(arg use_octomap)"     name="input_obstacle_cloud"
        value="octomap_point_cloud_centers" />
@@ -39,7 +40,7 @@
   </include>
 
   <include file="$(find safe_footstep_planner)/launch/color_labeling.launch">
-    <arg name="INPUT_IMAGE"   value="/depth_image_creator/output_image" />
+    <arg name="INPUT_IMAGE"  value="/depth_image_creator/output_image" />
     <arg name="RED_LABEL"    value="1" />
     <arg name="GREEN_LABEL"  value="2" />
     <arg name="BLUE_LABEL"   value="3" />
@@ -50,9 +51,10 @@
   <node pkg="jsk_footstep_planner" type="footstep_planner_node"
         name="footstep_planner" output="screen">
     <remap from="~pointcloud_model" to="$(arg input_point_cloud)" />
-    <remap from="~obstacle_model" to="$(arg input_obstacle_cloud)" />
-    <remap from="~label_image" to="$(arg input_label_image)" />
-    <remap from="~label_info" to="$(arg input_label_info)" />
+    <remap from="~obstacle_model"   to="$(arg input_obstacle_cloud)" />
+    <remap from="~label_image"      to="$(arg input_label_image)" />
+    <remap from="~cost_image"       to="$(arg input_cost_image)" />
+    <remap from="~cost_info"        to="$(arg input_cost_info)" />
     <!-- use point cloud (plane estimation) for making footstep -->
     <rosparam subst_value="true">
       use_pointcloud_model: $(arg use_pointcloud)
