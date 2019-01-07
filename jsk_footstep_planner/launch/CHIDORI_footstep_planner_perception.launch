@@ -9,6 +9,7 @@
   <arg name="use_octomap"    default="false" />
   <arg name="use_obstacle"   default="false" />
   <arg name="use_pointcloud" default="true" />
+  <arg name="use_foothold_check"      default="true" />
   <arg name="use_footstep_controller" default="true" />
   <arg name="LAUNCH_TF_BUFFER_SERVER" default="true" />
   <arg name="USE_NORMAL" default="false" />
@@ -56,6 +57,9 @@
     <remap from="~cost_image"       to="$(arg input_cost_image)" />
     <remap from="~cost_info"        to="$(arg input_cost_info)" />
     <!-- use point cloud (plane estimation) for making footstep -->
+    <rosparam subst_value="true">
+      use_foothold_check: $(arg use_foothold_check)
+    </rosparam>
     <rosparam subst_value="true">
       use_pointcloud_model: $(arg use_pointcloud)
       #project_start_state:  $(arg use_pointcloud)

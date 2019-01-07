@@ -803,8 +803,9 @@ namespace jsk_footstep_planner
       return;
     }
     // check unknown foothold
-    std::cout << "============================================" << std::endl;
-    for (int i = 0; i < path.size(); i++) {
+    if (use_foothold_check_) {
+      std::cout << "============================================" << std::endl;
+      for (int i = 0; i < path.size(); i++) {
         FootstepState::Ptr state = path.at(i)->getState();
         Eigen::Affine3f state_pose_ = state->getPose();
         Eigen::Vector3f original(state_pose_.translation()[0],
@@ -817,9 +818,9 @@ namespace jsk_footstep_planner
           path = tmp_path;
           break;
         }
+      }
+      std::cout << "============================================" << std::endl;
     }
-    std::cout << "============================================" << std::endl;
-
     // finalize in graph
     std::vector <FootstepState::Ptr> finalizeSteps;
     if (! (graph_->finalizeSteps((path.size() >1 ? path[path.size()-2]->getState() : FootstepState::Ptr()),
@@ -1054,6 +1055,9 @@ namespace jsk_footstep_planner
     if (use_lazy_perception_ != config.use_lazy_perception) {
       use_lazy_perception_ = config.use_lazy_perception;
       need_to_rebuild_graph = true;
+    }
+    if (use_foothold_check_ != config.use_foothold_check) {
+      use_foothold_check_ = config.use_foothold_check;
     }
     if (use_local_movement_ != config.use_local_movement) {
       use_local_movement_ = config.use_local_movement;

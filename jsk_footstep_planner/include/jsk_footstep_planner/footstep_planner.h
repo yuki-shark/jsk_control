@@ -184,6 +184,7 @@ namespace jsk_footstep_planner
     bool project_goal_state_;
     bool use_pointcloud_model_;
     bool use_lazy_perception_;
+    bool use_foothold_check_;
     bool use_local_movement_;
     bool use_obstacle_model_;
     double resolution_x_;
