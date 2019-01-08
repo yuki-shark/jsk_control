@@ -143,9 +143,9 @@ namespace jsk_footstep_planner
     virtual void publishText(ros::Publisher& pub,
                              const std::string& text,
                              PlanningStatus status);
-    virtual double getLabel(Eigen::Vector3f original,
-                          cv_bridge::CvImage::Ptr label_image,
-                          sensor_msgs::CameraInfo::Ptr cost_info);
+    virtual int getLabel(Eigen::Vector3f original,
+                         cv_bridge::CvImage::Ptr label_image,
+                         sensor_msgs::CameraInfo::Ptr cost_info);
 
     boost::mutex mutex_;
     actionlib::SimpleActionServer<jsk_footstep_msgs::PlanFootstepsAction> as_;

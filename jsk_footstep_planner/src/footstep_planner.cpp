@@ -479,7 +479,7 @@ namespace jsk_footstep_planner
     pub.publish(msg);
   }
 
-  double FootstepPlanner::getLabel(
+  int FootstepPlanner::getLabel(
     Eigen::Vector3f original, cv_bridge::CvImage::Ptr label_image, sensor_msgs::CameraInfo::Ptr cost_info)
   {
     tf::StampedTransform transform;
@@ -528,10 +528,9 @@ namespace jsk_footstep_planner
         label = 0;
       }
       else {
-        // std::cout << label_list.at(0) << " " << label_list.at(1) << " " << label_list.at(2) << " " << label_list.at(3) << " " << label_list.at(4) << std::endl;
         label = std::distance(label_list.begin(), std::max_element(label_list.begin() + 1, label_list.end()));
       }
-      return double(label);
+      return label;
     }
     catch (tf::TransformException ex){
       ROS_ERROR("%s",ex.what());
@@ -813,24 +812,23 @@ namespace jsk_footstep_planner
       return;
     }
     // check unknown foothold
+    bool final_goal = true;
     if (use_foothold_check_) {
-      std::cout << "============================================" << std::endl;
       for (int i = 0; i < path.size(); i++) {
         FootstepState::Ptr state = path.at(i)->getState();
         Eigen::Affine3f state_pose_ = state->getPose();
         Eigen::Vector3f original(state_pose_.translation()[0],
                                  state_pose_.translation()[1],
                                  state_pose_.translation()[2]);
-        double label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
-        std::cout << "step : " << i + 1 << "  label : " << label << std::endl;
+        int label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
         if (std::find(known_labels_->data.begin(), known_labels_->data.end(), label) == known_labels_->data.end()) {
           std::vector<SolverNode<FootstepState, FootstepGraph>::Ptr> tmp_path(path.begin(), path.begin() + i);
           path = tmp_path;
-          std::cout << "label " << label << " is unknown." << std::endl;
+          ROS_INFO_STREAM("label " << label << " is unknown.");
+          final_goal = false;
           break;
         }
       }
-      std::cout << "============================================" << std::endl;
     }
     // finalize in graph
     std::vector <FootstepState::Ptr> finalizeSteps;
@@ -855,12 +853,14 @@ namespace jsk_footstep_planner
         ros_path.footsteps.push_back(*(st->toROSMsg(inv_rleg_footstep_offset_)));
       }
     }
-    for (size_t i = 0; i < finalizeSteps.size(); i++) {
-      const FootstepState::Ptr st = finalizeSteps[i];
-      if (st->getLeg() == jsk_footstep_msgs::Footstep::LEFT) {
-        ros_path.footsteps.push_back(*(st->toROSMsg(inv_lleg_footstep_offset_)));
-      } else {
-        ros_path.footsteps.push_back(*(st->toROSMsg(inv_rleg_footstep_offset_)));
+    if (final_goal) {
+      for (size_t i = 0; i < finalizeSteps.size(); i++) {
+        const FootstepState::Ptr st = finalizeSteps[i];
+        if (st->getLeg() == jsk_footstep_msgs::Footstep::LEFT) {
+          ros_path.footsteps.push_back(*(st->toROSMsg(inv_lleg_footstep_offset_)));
+        } else {
+          ros_path.footsteps.push_back(*(st->toROSMsg(inv_rleg_footstep_offset_)));
+        }
       }
     }
     result_.result = ros_path;
