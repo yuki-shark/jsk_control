@@ -93,6 +93,7 @@ namespace jsk_footstep_planner
     }
     sub_pointcloud_model_ = nh.subscribe("pointcloud_model", 1, &FootstepPlanner::pointcloudCallback, this);
     sub_obstacle_model_ = nh.subscribe("obstacle_model", 1, &FootstepPlanner::obstacleCallback, this);
+    sub_known_labels_ = nh.subscribe("known_labels", 1, &FootstepPlanner::knownLabelsCallback, this);
     sub_label_image_ = nh.subscribe("label_image", 1, &FootstepPlanner::labelImageCallback, this);
     sub_cost_image_ = nh.subscribe("cost_image", 1, &FootstepPlanner::costImageCallback, this);
     sub_cost_info_ = nh.subscribe("cost_info", 1, &FootstepPlanner::costInfoCallback, this);
@@ -133,6 +134,15 @@ namespace jsk_footstep_planner
     if (graph_ && use_pointcloud_model_) {
       graph_->setPointCloudModel(pointcloud_model_);
     }
+  }
+
+  void FootstepPlanner::knownLabelsCallback(
+      const std_msgs::Int8MultiArray::ConstPtr& msg)
+  {
+    boost::mutex::scoped_lock lock(mutex_);
+    ROS_DEBUG("known labels are updated");
+    known_labels_.reset(new std_msgs::Int8MultiArray);
+    *known_labels_ = *msg;
   }
 
   // callback function for label image
@@ -813,9 +823,10 @@ namespace jsk_footstep_planner
                                  state_pose_.translation()[2]);
         double label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
         std::cout << "step : " << i + 1 << "  label : " << label << std::endl;
-        if (label == 4) {
+        if (std::find(known_labels_->data.begin(), known_labels_->data.end(), label) == known_labels_->data.end()) {
           std::vector<SolverNode<FootstepState, FootstepGraph>::Ptr> tmp_path(path.begin(), path.begin() + i);
           path = tmp_path;
+          std::cout << "label " << label << " is unknown." << std::endl;
           break;
         }
       }

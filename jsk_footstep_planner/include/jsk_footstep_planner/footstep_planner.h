@@ -52,6 +52,7 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
 #include <cv_bridge/cv_bridge.h>
+#include <std_msgs/Int8MultiArray.h>
 
 // footstep planning
 #include "jsk_footstep_planner/footstep_graph.h"
@@ -89,6 +90,7 @@ namespace jsk_footstep_planner
 
     virtual void pointcloudCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
     virtual void obstacleCallback(const sensor_msgs::PointCloud2::ConstPtr& msg);
+    virtual void knownLabelsCallback(const std_msgs::Int8MultiArray::ConstPtr& msg);
     virtual void labelImageCallback(const sensor_msgs::Image::ConstPtr& msg);
     virtual void costImageCallback(const sensor_msgs::Image::ConstPtr& msg);
     virtual void costInfoCallback(const sensor_msgs::CameraInfo::ConstPtr& msg);
@@ -154,6 +156,7 @@ namespace jsk_footstep_planner
     ros::Publisher pub_text_;
     ros::Subscriber sub_pointcloud_model_;
     ros::Subscriber sub_obstacle_model_;
+    ros::Subscriber sub_known_labels_;
     ros::Subscriber sub_label_image_;
     ros::Subscriber sub_cost_image_;
     ros::Subscriber sub_cost_info_;
@@ -164,6 +167,7 @@ namespace jsk_footstep_planner
     ros::ServiceServer srv_set_heuristic_path_;
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
+    std_msgs::Int8MultiArray::Ptr known_labels_;
     cv_bridge::CvImagePtr label_image_;
     cv_bridge::CvImagePtr cost_image_;
     sensor_msgs::CameraInfo::Ptr cost_info_;
