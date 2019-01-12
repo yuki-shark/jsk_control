@@ -56,6 +56,8 @@ namespace jsk_footstep_planner
       "close_list", 1, true);
     pub_open_list_ = nh.advertise<sensor_msgs::PointCloud2>(
       "open_list", 1, true);
+    pub_target_foothold_ = nh.advertise<safe_footstep_planner::TargetFoothold>(
+      "target_foothold", 1);
     srv_project_footprint_ = nh.advertiseService(
       "project_footprint", &FootstepPlanner::projectFootPrintService, this);
     srv_project_footprint_with_local_search_ = nh.advertiseService(
@@ -66,6 +68,7 @@ namespace jsk_footstep_planner
       "project_footstep", &FootstepPlanner::projectFootstepService, this);
     srv_set_heuristic_path_ = nh.advertiseService(
       "set_heuristic_path", &FootstepPlanner::setHeuristicPathService, this);
+    // srv_target_foothold_ = nh.serviceClient<jsk_footstep_planner::TargetFoothold>("/target_foothold");
     std::vector<double> lleg_footstep_offset, rleg_footstep_offset;
     if (jsk_topic_tools::readVectorParameter(nh, "lleg_footstep_offset", lleg_footstep_offset)) {
       inv_lleg_footstep_offset_ = Eigen::Vector3f(- lleg_footstep_offset[0],
@@ -539,6 +542,50 @@ namespace jsk_footstep_planner
     }
   }
 
+  // void FootstepPlanner::sendTargetFoothold(
+  //   SolverNode<FootstepState, FootstepGraph>::Ptr foothold_check_target, int label)
+  // {
+  //   std::cout << "sendTargetFoothold called" << std::endl;
+  //   jsk_footstep_planner::TargetFoothold srv;
+  //   geometry_msgs::Point target;
+  //   FootstepState::Ptr state = foothold_check_target->getState();
+  //   Eigen::Affine3f state_pose_ = state->getPose();
+  //   target.x = state_pose_.translation()[0];
+  //   target.y = state_pose_.translation()[1];
+  //   target.z = state_pose_.translation()[2];
+  //   srv.request.target = target;
+  //   srv.request.leg = static_cast<char>(state->getLeg());
+  //   srv.request.label = static_cast<char>(label);
+  //   std::cout << "srv request was made" << std::endl;
+  //   if (srv_target_foothold_.call(srv)) {
+  //     ROS_INFO("Success to send target foothold to operator");
+  //   } else {
+  //     ROS_ERROR("Failed to send target foothold to operator");
+  //   }
+  // }
+
+  void FootstepPlanner::publishTargetFoothold(
+    SolverNode<FootstepState, FootstepGraph>::Ptr last_step,
+    SolverNode<FootstepState, FootstepGraph>::Ptr target_step,
+    int label,
+    ros::Publisher& pub)
+  {
+    safe_footstep_planner::TargetFoothold target_foothold;
+    geometry_msgs::Point target;
+    // FootstepState::Ptr state = foothold_check_target->getState();
+    Eigen::Affine3f last_pose_   = last_step->getState()->getPose();
+    Eigen::Affine3f target_pose_ = target_step->getState()->getPose();
+
+    // = state->getPose();
+    target.x = target_pose_.translation()[0] - last_pose_.translation()[0];
+    target.y = target_pose_.translation()[1] - last_pose_.translation()[1];
+    target.z = target_pose_.translation()[2] - last_pose_.translation()[2];
+    target_foothold.target = target;
+    target_foothold.leg = static_cast<char>(target_step->getState()->getLeg());
+    target_foothold.label = static_cast<char>(label);
+    pub.publish(target_foothold);
+  }
+
   void FootstepPlanner::planCB(
     const jsk_footstep_msgs::PlanFootstepsGoal::ConstPtr& goal)
   {
@@ -823,6 +870,15 @@ namespace jsk_footstep_planner
         int label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
         if (std::find(known_labels_->data.begin(), known_labels_->data.end(), label) == known_labels_->data.end()) {
           std::vector<SolverNode<FootstepState, FootstepGraph>::Ptr> tmp_path(path.begin(), path.begin() + i);
+          // publish target foothold
+          std::cout << "path : " << i << "  label : " << label << std::endl;
+          // FootstepPlanner::sendTargetFoothold(path[i], label);
+          if (i > 1) {
+            FootstepPlanner::publishTargetFoothold(path[i-2], path[i], label, pub_target_foothold_);
+          }
+          // else {
+          //   FootstepPlanner::publishTargetFoothold(path[i], path[i], label, pub_target_foothold_);
+          // }
           path = tmp_path;
           ROS_INFO_STREAM("label " << label << " is unknown.");
           final_goal = false;

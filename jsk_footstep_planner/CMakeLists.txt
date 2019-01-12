@@ -10,17 +10,18 @@ endif(CCACHE_FOUND)
 
 find_package(catkin REQUIRED COMPONENTS jsk_footstep_msgs jsk_recognition_utils
   message_generation jsk_topic_tools roscpp pcl_ros geometry_msgs eigen_conversions
-  jsk_interactive_marker visualization_msgs dynamic_reconfigure roseus rostest)
+  jsk_interactive_marker visualization_msgs dynamic_reconfigure roseus rostest
+  safe_footstep_planner)
 #find_package(PCL REQUIRED)
 add_service_files(FILES
-  ChangeSuccessor.srv CollisionBoundingBoxInfo.srv ProjectFootstep.srv SetHeuristicPath.srv)
+  ChangeSuccessor.srv CollisionBoundingBoxInfo.srv ProjectFootstep.srv SetHeuristicPath.srv TargetFoothold.srv)
 generate_dynamic_reconfigure_options(
   cfg/FootstepPlanner.cfg cfg/PointCloudModelGenerator.cfg cfg/FootstepMarker.cfg)
 generate_messages(DEPENDENCIES geometry_msgs jsk_footstep_msgs)
 #catkin_python_setup()
 catkin_package(
   DEPENDS
-  CATKIN_DEPENDS jsk_footstep_msgs jsk_recognition_utils jsk_interactive_marker
+  CATKIN_DEPENDS jsk_footstep_msgs jsk_recognition_utils jsk_interactive_marker safe_footstep_planner
   INCLUDE_DIRS include # TODO include
   LIBRARIES jsk_footstep_planner # TODO
   )
@@ -51,24 +52,24 @@ add_library(jsk_footstep_planner
 add_executable(footstep_marker src/footstep_marker.cpp)
 target_link_libraries(footstep_marker jsk_footstep_planner)
 
-add_executable(sample_simple_graph demo/sample_simple_graph.cpp)
-target_link_libraries(sample_simple_graph jsk_footstep_planner)
-add_executable(sample_astar demo/sample_astar.cpp)
-target_link_libraries(sample_astar jsk_footstep_planner)
-add_executable(footstep_planning_2d_demo demo/footstep_planning_2d_demo.cpp)
-target_link_libraries(footstep_planning_2d_demo jsk_footstep_planner)
-add_executable(footstep_planning_2d_interactive_demo demo/footstep_planning_2d_interactive_demo.cpp)
-target_link_libraries(footstep_planning_2d_interactive_demo jsk_footstep_planner)
-add_executable(footstep_planning_2d_perception_demo demo/footstep_planning_2d_perception_demo.cpp)
-target_link_libraries(footstep_planning_2d_perception_demo jsk_footstep_planner)
-add_executable(bench_footstep_planner bench/bench_footstep_planner.cpp)
-target_link_libraries(bench_footstep_planner jsk_footstep_planner)
-add_executable(ann_grid_demo demo/ann_grid_demo.cpp)
-target_link_libraries(ann_grid_demo jsk_footstep_planner)
+# add_executable(sample_simple_graph demo/sample_simple_graph.cpp)
+# target_link_libraries(sample_simple_graph jsk_footstep_planner)
+# add_executable(sample_astar demo/sample_astar.cpp)
+# target_link_libraries(sample_astar jsk_footstep_planner)
+# add_executable(footstep_planning_2d_demo demo/footstep_planning_2d_demo.cpp)
+# target_link_libraries(footstep_planning_2d_demo jsk_footstep_planner)
+# add_executable(footstep_planning_2d_interactive_demo demo/footstep_planning_2d_interactive_demo.cpp)
+# target_link_libraries(footstep_planning_2d_interactive_demo jsk_footstep_planner)
+# add_executable(footstep_planning_2d_perception_demo demo/footstep_planning_2d_perception_demo.cpp)
+# target_link_libraries(footstep_planning_2d_perception_demo jsk_footstep_planner)
+# add_executable(bench_footstep_planner bench/bench_footstep_planner.cpp)
+# target_link_libraries(bench_footstep_planner jsk_footstep_planner)
+# add_executable(ann_grid_demo demo/ann_grid_demo.cpp)
+# target_link_libraries(ann_grid_demo jsk_footstep_planner)
 add_executable(footstep_planner_node src/footstep_planner_node.cpp)
 target_link_libraries(footstep_planner_node jsk_footstep_planner)
-add_executable(footstep_projection_demo demo/footstep_projection_demo.cpp)
-target_link_libraries(footstep_projection_demo jsk_footstep_planner)
+# add_executable(footstep_projection_demo demo/footstep_projection_demo.cpp)
+# target_link_libraries(footstep_projection_demo jsk_footstep_planner)
 add_executable(pointcloud_model_generator_node src/pointcloud_model_generator_node.cpp)
 target_link_libraries(pointcloud_model_generator_node jsk_footstep_planner)
 
@@ -89,12 +90,12 @@ install(DIRECTORY euslisp launch scripts
   USE_SOURCE_PERMISSIONS
   PATTERN ".svn" EXCLUDE
   )
-install(TARGETS jsk_footstep_planner sample_astar sample_simple_graph
-  footstep_planning_2d_demo footstep_planning_2d_interactive_demo
-  footstep_planning_2d_perception_demo
-  footstep_projection_demo
-  bench_footstep_planner
-  ann_grid_demo
+install(TARGETS jsk_footstep_planner#  sample_astar sample_simple_graph
+  # footstep_planning_2d_demo footstep_planning_2d_interactive_demo
+  # footstep_planning_2d_perception_demo
+  # footstep_projection_demo
+  # bench_footstep_planner
+  # ann_grid_demo
   footstep_planner_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

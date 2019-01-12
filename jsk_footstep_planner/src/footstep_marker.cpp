@@ -180,6 +180,9 @@ namespace jsk_footstep_planner
     // pose stamped command interface
     sub_pose_stamped_command_ = pnh_.subscribe("pose_stamped_command", 1, &FootstepMarker::poseStampedCommandCallback, this);
 
+    // // get target foothold from planner
+    // sub_target_foothold_ = pnh_.subscribe("/footstep_planner/target_foothold", 1, &FootstepMarker::targetFootholdCallback, this);
+
     // service servers
     srv_reset_fs_marker_    = pnh_.advertiseService("reset_marker",
                                                     &FootstepMarker::resetMarkerService, this);
@@ -195,6 +198,8 @@ namespace jsk_footstep_planner
                                                     &FootstepMarker::getFootstepMarkerPoseService, this);
     srv_stack_marker_pose_  = pnh_.advertiseService("stack_marker_pose",
                                                     &FootstepMarker::stackMarkerPoseService, this);
+    // service client
+    srv_target_foothold_ = nh.serviceClient<safe_footstep_planner::GetTargetFoothold>("/target_foothold");
 
     pub_plan_result_ = pnh_.advertise<jsk_footstep_msgs::FootstepArray>("output/plan_result", 1);
     pub_current_marker_mode_ = pnh_.advertise<jsk_rviz_plugins::OverlayText>("marker_mode", 1, true);
@@ -433,6 +438,7 @@ namespace jsk_footstep_planner
   {
     ROS_INFO("Done footsteps");
     resetInteractiveMarker();
+    // startFootholdCheck();
   }
 
   void FootstepMarker::stackFootstepCB(
@@ -739,6 +745,19 @@ namespace jsk_footstep_planner
     pub_plan_result_.publish(result->result);
     planning_state_ = FINISHED;
     plan_result_ = result->result;
+  }
+
+  void FootstepMarker::startFootholdCheck()
+  {
+    safe_footstep_planner::GetTargetFoothold srv;
+    srv.request.target = target_foothold_->target;
+    srv.request.leg    = target_foothold_->leg;
+    srv.request.label  = target_foothold_->label;
+    if (srv_target_foothold_.call(srv)) {
+      ROS_INFO("Success to send target foothold to operator");
+    } else {
+      ROS_ERROR("Failed to send target foothold to operator");
+    }
   }
 
   void FootstepMarker::planIfPossible(const visualization_msgs::InteractiveMarkerFeedbackConstPtr& feedback)
@@ -1119,6 +1138,13 @@ namespace jsk_footstep_planner
     const visualization_msgs::InteractiveMarkerFeedbackConstPtr dummy_feedback_ptr
       = boost::make_shared<const visualization_msgs::InteractiveMarkerFeedback>(dummy_feedback);
     processFeedbackCB(dummy_feedback_ptr);
+  }
+
+  void FootstepMarker::targetFootholdCallback(
+    const safe_footstep_planner::TargetFoothold::ConstPtr& msg)
+  {
+    target_foothold_.reset(new safe_footstep_planner::TargetFoothold);
+    *target_foothold_ = *msg;
   }
 
   bool FootstepMarker::resetMarkerService(

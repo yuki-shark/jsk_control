@@ -56,6 +56,8 @@
 #include "jsk_footstep_planner/SetHeuristicPath.h"
 #include <dynamic_reconfigure/server.h>
 #include <jsk_rviz_plugins/OverlayText.h>
+#include <safe_footstep_planner/TargetFoothold.h>
+#include <safe_footstep_planner/GetTargetFoothold.h>
 
 namespace jsk_footstep_planner
 {
@@ -157,6 +159,7 @@ namespace jsk_footstep_planner
     virtual jsk_footstep_msgs::FootstepArray footstepArrayFromPosePair(PosePair::Ptr pose_pair,
                                                                        const std_msgs::Header& header,
                                                                        bool is_lleg_first);
+    virtual void startFootholdCheck();
     // marker methods
     virtual void setupInitialMarker(PosePair::Ptr leg_poses,
                                     visualization_msgs::InteractiveMarker& int_marker);
@@ -181,6 +184,7 @@ namespace jsk_footstep_planner
 
     virtual void configCallback(Config& config, uint32_t level);
     virtual void poseStampedCommandCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
+    virtual void targetFootholdCallback(const safe_footstep_planner::TargetFoothold::ConstPtr& msg);
 
     virtual bool resetMarkerService(
       std_srvs::Empty::Request& req,
@@ -218,6 +222,7 @@ namespace jsk_footstep_planner
     ros::Publisher pub_plan_result_;
     ros::Publisher pub_current_marker_mode_;
     ros::Subscriber sub_pose_stamped_command_;
+    ros::Subscriber sub_target_foothold_;
     ros::ServiceServer srv_reset_fs_marker_;
     ros::ServiceServer srv_toggle_fs_com_mode_;
     ros::ServiceServer srv_execute_footstep_;
@@ -225,6 +230,7 @@ namespace jsk_footstep_planner
     ros::ServiceServer srv_wait_for_fs_plan_;
     ros::ServiceServer srv_get_fs_marker_pose_;
     ros::ServiceServer srv_stack_marker_pose_;
+    ros::ServiceClient srv_target_foothold_;
 
     std::string odom_frame_id_;
     std::string lleg_end_coords_, rleg_end_coords_;
@@ -234,6 +240,7 @@ namespace jsk_footstep_planner
     FootstepVec lleg_footstep_offset_, rleg_footstep_offset_;
     double default_footstep_margin_;
 
+    safe_footstep_planner::TargetFoothold::Ptr target_foothold_;
     jsk_footstep_msgs::FootstepArray plan_result_;
     boost::shared_ptr<tf2_ros::BufferClient> tf_client_;
     boost::shared_ptr<interactive_markers::InteractiveMarkerServer> server_;

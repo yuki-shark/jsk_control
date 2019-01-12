@@ -64,6 +64,8 @@
 
 #include "jsk_footstep_planner/ProjectFootstep.h"
 #include "jsk_footstep_planner/SetHeuristicPath.h"
+// #include "jsk_footstep_planner/TargetFoothold.h"
+#include "safe_footstep_planner/TargetFoothold.h"
 
 namespace jsk_footstep_planner
 {
@@ -146,6 +148,14 @@ namespace jsk_footstep_planner
     virtual int getLabel(Eigen::Vector3f original,
                          cv_bridge::CvImage::Ptr label_image,
                          sensor_msgs::CameraInfo::Ptr cost_info);
+    // virtual void sendTargetFoothold(
+    //   SolverNode<FootstepState, FootstepGraph>::Ptr foothold_check_target,
+    //   int label);
+    virtual void publishTargetFoothold(
+      SolverNode<FootstepState, FootstepGraph>::Ptr last_step,
+      SolverNode<FootstepState, FootstepGraph>::Ptr target_step,
+      int label,
+      ros::Publisher& pub);
 
     boost::mutex mutex_;
     actionlib::SimpleActionServer<jsk_footstep_msgs::PlanFootstepsAction> as_;
@@ -154,6 +164,7 @@ namespace jsk_footstep_planner
     ros::Publisher pub_close_list_;
     ros::Publisher pub_open_list_;
     ros::Publisher pub_text_;
+    ros::Publisher  pub_target_foothold_;
     ros::Subscriber sub_pointcloud_model_;
     ros::Subscriber sub_obstacle_model_;
     ros::Subscriber sub_known_labels_;
@@ -165,6 +176,7 @@ namespace jsk_footstep_planner
     ros::ServiceServer srv_collision_bounding_box_info_;
     ros::ServiceServer srv_project_footstep_;
     ros::ServiceServer srv_set_heuristic_path_;
+    // ros::ServiceClient srv_target_foothold_;
     pcl::PointCloud<pcl::PointNormal>::Ptr pointcloud_model_;
     pcl::PointCloud<pcl::PointXYZ>::Ptr obstacle_model_;
     std_msgs::Int8MultiArray::Ptr known_labels_;
