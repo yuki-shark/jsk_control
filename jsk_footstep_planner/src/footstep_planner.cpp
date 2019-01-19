@@ -519,7 +519,7 @@ namespace jsk_footstep_planner
       int right_u  = std::min(center_u + radius + 1, image_width );
       int top_v    = std::max(center_v - radius    , 0           );
       int bottom_v = std::min(center_v + radius + 1, image_height);
-      int label_size = 100;
+      int label_size = 256;
       std::vector<int> label_list(label_size, 0);
       for (int i=top_v; i<bottom_v; i++) {
         for (int j=left_u; j<right_u; j++) {
@@ -527,11 +527,15 @@ namespace jsk_footstep_planner
         }
       }
       int label;
+      int label_threshold = 50;
       if (label_list.at(0) == std::pow((radius*2 + 1), 2)) {
         label = 0;
       }
       else {
         label = std::distance(label_list.begin(), std::max_element(label_list.begin() + 1, label_list.end()));
+        if (label_list[label] < label_threshold) {
+          label = 0;
+        }
       }
       return label;
     }
