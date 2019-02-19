@@ -1179,6 +1179,7 @@ namespace jsk_footstep_planner
     parameters_.support_padding_x = config.support_padding_x;
     parameters_.support_padding_y = config.support_padding_y;
     parameters_.skip_cropping = config.skip_cropping;
+    parameters_.safety_cost_weight = config.safety_cost_weight;
     footstep_size_x_ = config.footstep_size_x;
     footstep_size_y_ = config.footstep_size_y;
     project_start_state_ = config.project_start_state;
