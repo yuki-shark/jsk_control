@@ -218,6 +218,7 @@ namespace jsk_footstep_planner
     std::string cost_;
     double cost_weight_;
     double heuristic_weight_;
+    double ignore_steps_;
     std::string pointcloud_model_frame_id_, obstacle_model_frame_id_;
     double planning_timeout_;
 

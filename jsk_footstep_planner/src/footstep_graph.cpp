@@ -432,7 +432,7 @@ namespace jsk_footstep_planner
       }
       double safety_cost = double(max_cost);
 
-      return safety_cost;
+      return safety_cost * parameters_.safety_cost_weight;
     }
     catch (tf::TransformException ex){
       ROS_ERROR("%s",ex.what());
@@ -582,5 +582,6 @@ namespace jsk_footstep_planner
     }
 
     return step_cost + safety_cost;
+    // return step_cost + parameters_.safety_cost_weight * safety_cost;
   }
 }

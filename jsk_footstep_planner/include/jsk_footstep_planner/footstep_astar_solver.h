@@ -61,12 +61,14 @@ namespace jsk_footstep_planner
       GraphPtr graph, size_t x_num, size_t y_num, size_t theta_num,
       unsigned int profile_period = 1024,
       double cost_weight = 1.0,
-      double heuristic_weight = 1.0):
+      double heuristic_weight = 1.0,
+      int ignore_steps = 2):
       footstep_close_list_(x_num, y_num, theta_num),
       profile_period_(profile_period),
       is_set_profile_function_(false),
       cost_weight_(cost_weight),
       heuristic_weight_(heuristic_weight),
+      ignore_steps_(ignore_steps),
       is_cancelled_(false),
       AStarSolver<GraphT>(graph)
     {
@@ -95,8 +97,7 @@ namespace jsk_footstep_planner
         if (graph_->usePointCloudModel() && lazy_projection) {
           unsigned int error_state;
           StatePtr projected_state;
-          // if (target_node->getGeneration() < 10) {
-          if (target_node->getGeneration() < 2) {
+          if (target_node->getGeneration() < ignore_steps_) {
             projected_state = target_node->getState();
           } else {
             projected_state = graph_->projectFootstep(target_node->getState(),
@@ -111,8 +112,7 @@ namespace jsk_footstep_planner
                   = graph_->localMoveFootstepState(target_node->getState());
                 for (int i = 0; i < states_candidates.size(); i ++) {
                   StatePtr tmp_state;
-                  // if (target_node->getGeneration() < 10) {
-                  if (target_node->getGeneration() < 2) {
+                  if (target_node->getGeneration() < ignore_steps_) {
                     tmp_state = states_candidates[i];
                   } else {
                     tmp_state = graph_->projectFootstep(states_candidates[i],
@@ -162,11 +162,9 @@ namespace jsk_footstep_planner
         }
         else if (!findInCloseList(target_node->getState())) {
           addToCloseList(target_node->getState());
-          // if (target_node->getGeneration() < 10) graph_->setIgnoreProjection(true);
-          if (target_node->getGeneration() < 2) graph_->setIgnoreProjection(true);
+          if (target_node->getGeneration() < ignore_steps_) graph_->setIgnoreProjection(true);
           std::vector<SolverNodePtr> next_nodes = target_node->expand(target_node, verbose_);
-          // if (target_node->getGeneration() < 10) graph_->setIgnoreProjection(false);
-          if (target_node->getGeneration() < 2) graph_->setIgnoreProjection(false);
+          if (target_node->getGeneration() < ignore_steps_) graph_->setIgnoreProjection(false);
 
           // Add to open list only if next_nodes is not in close list.
           // We can do it thanks to FootstepStateDiscreteCloseList
@@ -272,6 +270,7 @@ namespace jsk_footstep_planner
     using BestFirstSearchSolver<GraphT>::open_list_;
     const double cost_weight_;
     const double heuristic_weight_;
+    const double ignore_steps_;
     bool is_cancelled_;
   };
 }

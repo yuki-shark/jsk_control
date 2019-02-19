@@ -56,7 +56,8 @@ namespace jsk_footstep_planner
       plane_estimation_normal_distance_weight(0.2), plane_estimation_normal_opening_angle(0.2),
       plane_estimation_min_ratio_of_inliers(0.8), plane_estimation_outlier_threshold(0.02),
       support_check_vertex_neighbor_threshold(0.02),
-      support_padding_x(0.0), support_padding_y(0.0)
+      support_padding_x(0.0), support_padding_y(0.0),
+      safety_cost_weight(1.0)
     {
     };
     bool use_transition_limit;
@@ -95,6 +96,7 @@ namespace jsk_footstep_planner
     double support_padding_x;
     double support_padding_y;
     double collision_padding;
+    double safety_cost_weight;
   };
 }
 #endif
