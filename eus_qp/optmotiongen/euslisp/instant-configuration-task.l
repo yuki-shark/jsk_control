@@ -2271,14 +2271,16 @@ return $\bm{v}_{\mathit{reg}} \in \mathbb{R}^{\mathit{dim}(\bm{q})}$
   (:update-collision-inequality-constraint
    ()
    "
-リンク1とリンク2の最近点を$\bm{p}_1, \bm{p}_2$とする．
+リンク1とリンク2が干渉していないとき，最近点を$\bm{p}_1, \bm{p}_2$とする．
+また，干渉しているとき，最も深く侵入している点を$\bm{p}_1, \bm{p}_2$とする．
 リンク1とリンク2が干渉しない条件を，
-最近点$\bm{p}_1, \bm{p}_2$の距離が$d_{\mathit{margin}}$以上である条件に置き換えて考える．
+$\bm{p}_1, \bm{p}_2$の距離が$d_{\mathit{margin}}$以上である条件に置き換えて考える．
 これは次式で表される．
 \begin{eqnarray}
   &&\bm{d}_{12}^T ( \bm{p}_1 - \bm{p}_2 ) \geq d_{\mathit{margin}} \\
-  &&{\rm where} \ \ \bm{d}_{12} = \bm{p}_1 - \bm{p}_2
+  &&{\rm where} \ \ \bm{d}_{12} = \left\{ \begin{array}{ll} \frac{\bm{p}_1 - \bm{p}_2}{\| \bm{p}_1 - \bm{p}_2 \|} & {\rm (no \ collision)} \\ -\frac{\bm{p}_1 - \bm{p}_2}{\| \bm{p}_1 - \bm{p}_2 \|} & {\rm (collision)} \end{array} \right.
 \end{eqnarray}
+以降では$\bm{p}_1, \bm{p}_2$はコンフィギュレーションに依存するが，$\bm{d}_{12}$はコンフィギュレーションに依存しないと近似する．
 コンフィギュレーションが$\Delta \bm{q}$だけ更新されてもこれが成立するための条件は次式で表される．
 \begin{eqnarray}
   &&\bm{d}_{12}^T \left\{ ( \bm{p}_1 + \Delta \bm{p}_1 ) - ( \bm{p}_2 + \Delta \bm{p}_2 ) \right\} \geq d_{\mathit{margin}} \\
@@ -2299,7 +2301,9 @@ return $\bm{v}_{\mathit{reg}} \in \mathbb{R}^{\mathit{dim}(\bm{q})}$
   &&\phantom{\rm where} \ \
   \bm{c}_{\mathit{col,invar}}^T = \bm{d}_{12}^T (\bm{J}_{\phi, 1} - \bm{J}_{\phi, 2}) \\
   &&\phantom{\rm where} \ \
-  d_{\mathit{col}} = - ( \bm{d}_{12}^T (\bm{p}_{1} - \bm{p}_2) - d_{\mathit{margin}} )
+  d_{\mathit{col}} = - ( \bm{d}_{12}^T (\bm{p}_{1} - \bm{p}_2) - d_{\mathit{margin}} ) = - ( \mathit{signed\mathchar`-dist}(\bm{p}_1, \bm{p}_2) - d_{\mathit{margin}} ) \\
+  &&\phantom{\rm where} \ \
+  \mathit{signed\mathchar`-dist}(\bm{p}_1, \bm{p}_2) = \left\{ \begin{array}{ll} \| \bm{p}_1 - \bm{p}_2 \| & {\rm (no \ collision)} \\ - \| \bm{p}_1 - \bm{p}_2 \| & {\rm (collision)} \end{array} \right.
 \end{eqnarray}
 
 $i$番目の干渉回避リンクペアに関する行列，ベクトルをそれぞれ$\bm{c}_{\mathit{col,var,i}}^T, \bm{c}_{\mathit{col,invar,i}}^T, d_{\mathit{col, i}}$とする．
@@ -2345,6 +2349,7 @@ update inequality matrix $\bm{C}_{\mathit{col},\theta}, \bm{C}_{\mathit{col,\phi
               (c1 (make-cascoords :pos p1 :parent b1))
               (c2 (make-cascoords :pos p2 :parent b2))
               (dist-margin (elt _collision-distance-margin-list i))
+              ;; 'dist' is the signed distance when using 'bt-collision-distance' (i.e. negative for penetration depth)
               (dist (- (* 1e-3 (elt col-ret 0)) dist-margin)) ;; [m]
               (dir
                (cond ((functionp 'bt-collision-distance)
