@@ -3,6 +3,8 @@
 (load "./robot-environment.l")
 (load "./torque-gradient.l")
 (load "package://eus_qp/euslisp/contact-optimization.l")
+(when (ros::rospack-find "eusbullet")
+  (load "package://eusbullet/euslisp/eusbullet.l"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
