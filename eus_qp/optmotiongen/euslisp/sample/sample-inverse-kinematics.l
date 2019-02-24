@@ -161,16 +161,26 @@
      (irteus-ik? nil)
      (pre-process-func)
      (post-process-func)
+     (start-from-collision? nil)
      &allow-other-keys
      )
   (setq *robot* (instance sarmclass :init))
   (setq *arrow* (instance arrow-object :init))
   (send *arrow* :newcoords
         (make-coords :pos (float-vector 400 -200 300) :rpy (list (deg2rad 60) 0 0)))
-  (setq *obstacle* (make-cube 250 250 250))
-  (send *obstacle* :newcoords
-        (make-coords :pos (float-vector 200 -200 600)))
+  (cond (start-from-collision?
+         (setq *obstacle* (make-cube 500 250 250))
+         (send *obstacle* :newcoords (make-coords :pos (float-vector 200 -200 600)))
+         )
+        (t
+         (setq *obstacle* (make-cube 250 250 250))
+         (send *obstacle* :newcoords (make-coords :pos (float-vector 200 -200 600)))
+         ))
   (send *obstacle* :set-color (float-vector 1 0 0) 0.5)
+  (when start-from-collision?
+    (send (elt (send *robot* :joint-list) 0) :joint-angle -30)
+    (send (elt (send *robot* :joint-list) 2) :joint-angle 90)
+    )
   (objects (list *robot* *arrow* *obstacle*))
 
   (send *robot*
