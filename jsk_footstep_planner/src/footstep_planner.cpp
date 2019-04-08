@@ -158,8 +158,8 @@ namespace jsk_footstep_planner
     try
     {
       bool use_label_image_ = true;
-      // label_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32SC1);
-      label_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+      label_image_ = cv_bridge::toCvCopy(msg, msg->encoding);
+      // label_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
       if (graph_ && use_label_image_) {
         graph_->setLabelImage(label_image_);
       }
@@ -181,8 +181,8 @@ namespace jsk_footstep_planner
     try
     {
       bool use_cost_image_ = true;
-      // cost_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::TYPE_32SC1);
-      cost_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
+      cost_image_ = cv_bridge::toCvCopy(msg, msg->encoding);
+      // cost_image_ = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::MONO8);
       if (graph_ && use_cost_image_) {
         graph_->setCostImage(cost_image_);
       }
@@ -521,13 +521,14 @@ namespace jsk_footstep_planner
       int bottom_v = std::min(center_v + radius + 1, image_height);
       int label_size = 256;
       std::vector<int> label_list(label_size, 0);
-      for (int i=top_v; i<bottom_v; i++) {
-        for (int j=left_u; j<right_u; j++) {
-          label_list.at(label_image->image.data[i * image_width + j])++;
+      for (int y=top_v; y<bottom_v; y++) {
+        for (int x=left_u; x<right_u; x++) {
+          label_list[label_image->image.at<int>(y, x)]++;
+          // label_list.at(label_image->image.data[i * image_width + j])++;
         }
       }
       int label;
-      int label_threshold = 50;
+      int label_threshold = 100;
       if (label_list.at(0) == std::pow((radius*2 + 1), 2)) {
         label = 0;
       }
@@ -866,29 +867,35 @@ namespace jsk_footstep_planner
     // check unknown foothold
     bool final_goal = true;
     if (use_foothold_check_) {
-      for (int i = 0; i < path.size(); i++) {
-        FootstepState::Ptr state = path.at(i)->getState();
-        Eigen::Affine3f state_pose_ = state->getPose();
-        Eigen::Vector3f original(state_pose_.translation()[0],
-                                 state_pose_.translation()[1],
-                                 state_pose_.translation()[2]);
-        int label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
-        if (std::find(known_labels_->data.begin(), known_labels_->data.end(), label) == known_labels_->data.end()) {
-          std::vector<SolverNode<FootstepState, FootstepGraph>::Ptr> tmp_path(path.begin(), path.begin() + i);
-          // publish target foothold
-          std::cout << "path : " << i << "  label : " << label << std::endl;
-          // FootstepPlanner::sendTargetFoothold(path[i], label);
-          if (i > 1) {
+      if (label_image_ && known_labels_) {
+        for (int i = 2; i < path.size(); i++) {
+          FootstepState::Ptr state = path.at(i)->getState();
+          Eigen::Affine3f state_pose_ = state->getPose();
+          Eigen::Vector3f original(state_pose_.translation()[0],
+                                   state_pose_.translation()[1],
+                                   state_pose_.translation()[2]);
+          int label = FootstepPlanner::getLabel(original, label_image_, cost_info_);
+          // int cost  = FootstepPlanner::getLabel(original, cost_image_,  cost_info_);
+          std::cout << "label: " << label << std::endl;
+          if (std::find(known_labels_->data.begin(), known_labels_->data.end(), label) == known_labels_->data.end()) {
+            std::vector<SolverNode<FootstepState, FootstepGraph>::Ptr> tmp_path(path.begin(), path.begin() + i);
+            // publish target foothold
+            std::cout << "path : " << i << "  label : " << label << std::endl;
+            // FootstepPlanner::sendTargetFoothold(path[i], label);
+            // if (i > 1) {
             FootstepPlanner::publishTargetFoothold(path[i-2], path[i], label, pub_target_foothold_);
+            // }
+            // else {
+            //   FootstepPlanner::publishTargetFoothold(path[i], path[i], label, pub_target_foothold_);
+            // }
+            path = tmp_path;
+            ROS_INFO_STREAM("label " << label << " is unknown.");
+            final_goal = false;
+            break;
           }
-          // else {
-          //   FootstepPlanner::publishTargetFoothold(path[i], path[i], label, pub_target_foothold_);
-          // }
-          path = tmp_path;
-          ROS_INFO_STREAM("label " << label << " is unknown.");
-          final_goal = false;
-          break;
         }
+      } else {
+        ROS_ERROR("Failed to get label image or know labels");
       }
     }
     // finalize in graph

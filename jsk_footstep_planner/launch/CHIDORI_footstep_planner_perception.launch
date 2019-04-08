@@ -19,7 +19,7 @@
   <arg name="point_cloud"    default="/tf_transform_cloud/output" />
   <!-- <arg name="point_cloud"    default="/accumulated_heightmap_pointcloud_static/output" /> -->
   <arg name="input_known_labels" default="/known_labels" />
-  <arg name="input_label_image"  default="/label_image" />
+  <arg name="input_label_image"  default="/fcn_object_segmentation/output" />
   <arg name="input_cost_image"   default="/cost_image" />
   <arg name="input_cost_info"    default="/static_virtual_camera/camera_info" />
 
@@ -35,19 +35,24 @@
   <env name="ROBOT" value="CHIDORI" />
 
   <!-- depth image creator -->
-  <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch">
-    <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" />
-    <arg name="use_laser_pointcloud" value="$(arg use_laser_pointcloud)" />
-    <arg name="rviz"                 value="false" />
-  </include>
+  <!-- <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch"> -->
+  <!--   <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" /> -->
+  <!--   <arg name="use_laser_pointcloud" value="$(arg use_laser_pointcloud)" /> -->
+  <!--   <arg name="rviz"                 value="false" /> -->
+  <!-- </include> -->
 
-  <include file="$(find safe_footstep_planner)/launch/color_labeling.launch">
-    <arg name="INPUT_IMAGE"  value="/depth_image_creator/output_image" />
-    <arg name="RED_LABEL"    value="1" />
-    <arg name="GREEN_LABEL"  value="2" />
-    <arg name="BLUE_LABEL"   value="3" />
-    <arg name="YELLOW_LABEL" value="4" />
-  </include>
+  <!-- <include file="$(find safe_footstep_planner)/launch/color_labeling.launch"> -->
+  <!--   <arg name="INPUT_IMAGE"  value="/depth_image_creator/output_image" /> -->
+  <!--   <arg name="RED_LABEL"    value="1" /> -->
+  <!--   <arg name="GREEN_LABEL"  value="2" /> -->
+  <!--   <arg name="BLUE_LABEL"   value="3" /> -->
+  <!--   <arg name="YELLOW_LABEL" value="4" /> -->
+  <!-- </include> -->
+
+  <!-- label image to cost image -->
+  <node name="label_to_cost_image" pkg="safe_footstep_planner" type="label_to_cost_image" output="screen">
+    <remap from="/label_image" to="/fcn_object_segmentation/output"/>
+  </node>
 
   <!-- footstep planner -->
   <node pkg="jsk_footstep_planner" type="footstep_planner_node"
@@ -92,12 +97,16 @@
       ## offset from end-coords -> center of cube
       #lleg_footstep_offset: [0.0, 0.0, 0.0]
       #rleg_footstep_offset: [0.0, 0.0, 0.0]
-      lleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding
-      rleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding
+      <!-- lleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding -->
+      <!-- rleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding -->
+      lleg_footstep_offset: [0.03, 0.01, 0.0] ## offset for padding
+      rleg_footstep_offset: [0.03, -0.01, 0.0] ## offset for padding
       ## without padding
       ##footstep_size_x: 0.230
-      footstep_size_x: 0.260 ## add toe padding
-      footstep_size_y: 0.135
+      footstep_size_x: 0.280 ## add toe padding
+      footstep_size_y: 0.165
+      <!-- footstep_size_x: 0.260 -->
+      <!-- footstep_size_y: 0.135 -->
     </rosparam>
     <!-- parameters for plane estimation -->
     <rosparam subst_value="true">
@@ -126,17 +135,24 @@
     </rosparam>
     <!-- limitation of steps -->
     <rosparam>
+      <!-- use_transition_limit: false -->
+      <!-- transition_limit_x: 0.5 -->
+      <!-- transition_limit_y: 0.35 -->
+      <!-- transition_limit_z: 0.4 -->
       use_transition_limit: false
-      transition_limit_x: 0.5
-      transition_limit_y: 0.35
-      transition_limit_z: 0.4
+      transition_limit_x: 0.4
+      transition_limit_y: 0.25
+      transition_limit_z: 0.15
       transition_limit_roll:  0.6
       transition_limit_pitch: 0.6
       transition_limit_yaw:   0.4
     </rosparam>
     <rosparam>
-      support_check_x_sampling: 3
-      support_check_y_sampling: 3
+      <!-- support_check_x_sampling: 3 -->
+      <!-- support_check_y_sampling: 3 -->
+      <!-- support_check_vertex_neighbor_threshold: 0.02 -->
+      support_check_x_sampling: 4
+      support_check_y_sampling: 4
       support_check_vertex_neighbor_threshold: 0.02
       support_padding_x: 0.0 ##
       support_padding_y: 0.0 ##
@@ -155,7 +171,7 @@
         theta: 0
 # + side step
       - x: 0
-        y: -0.10
+        y: -0.08
         theta: 0
       - x: 0
         y: -0.04
@@ -233,8 +249,377 @@
       - x: -0.04
         y: 0
         theta: -0.09
+# add
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.1
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.06
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.04
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: -0.02
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.0
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.02
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.04
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.06
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.08
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.1
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.12
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+      - x: 0.16
+        y: -0.08
+        theta: 0
+
     </rosparam>
   </node>
+      <!-- - x: -0.10 -->
+      <!--   y: 0.04 -->
+      <!--   theta: 0 -->
+      <!-- - x: 0.10 -->
+      <!--   y: 0.04 -->
+      <!--   theta: 0 -->
+      <!-- - x: 0.10 -->
+      <!--   y: -0.04 -->
+      <!--   theta: 0 -->
+      <!-- - x: -0.10 -->
+      <!--   y: -0.04 -->
+      <!--   theta: 0 -->
+      <!-- - x: -0.07 -->
+      <!--   y: -0.06 -->
+      <!--   theta: 0 -->
+      <!-- - x: 0.09 -->
+      <!--   y: -0.07 -->
+      <!--   theta: 0 -->
+      <!-- - x: -0.08 -->
+      <!--   y: -0.07 -->
+      <!--   theta: -0.19 -->
+      <!-- - x: 0.12 -->
+      <!--   y: -0.07 -->
+      <!--   theta: 0.19 -->
+      <!-- - x: 0.14 -->
+      <!--   y: -0.07 -->
+      <!--   theta: 0 -->
+      <!-- - x: -0.08 -->
+      <!--   y: 0.03 -->
+      <!--   theta: 0.19 -->
+
 
   <!-- footstep marker -->
   <group if="$(arg use_footstep_marker)">
@@ -245,10 +630,16 @@
         frame_id: map
         lleg_end_coords: lleg_end_coords
         rleg_end_coords: rleg_end_coords
-        footstep_size_x: 0.237418
-        footstep_size_y: 0.134017
-        lleg_footstep_offset: [0.015502,  0.010078, 0.0]
-        rleg_footstep_offset: [0.015502, -0.010078, 0.0]
+        <!-- footstep_size_x: 0.237418 -->
+        <!-- footstep_size_y: 0.134017 -->
+        <!-- footstep_size_x: 0.24 -->
+        <!-- footstep_size_y: 0.13 -->
+        footstep_size_x: 0.2800
+        footstep_size_y: 0.1650
+        <!-- lleg_footstep_offset: [0.015502,  0.010078, 0.0] -->
+        <!-- rleg_footstep_offset: [0.015502, -0.010078, 0.0] -->
+        lleg_footstep_offset: [0.03,  0.0, 0.0]
+        rleg_footstep_offset: [0.03, -0.0, 0.0]
         default_footstep_margin: 0.2
         use_default_step_as_goal: true
       </rosparam>
