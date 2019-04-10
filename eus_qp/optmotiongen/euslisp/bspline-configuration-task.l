@@ -85,6 +85,7 @@ return B-spline function value $b_{i, n}(t)$.
           (_dim-task "$\mathit{dim}(\bm{e})$")
           (_num-collision "$N_{\mathit{col}} :=$ number of collision check pairs")
           ;; scale
+          (_kin-scale-mat-list "$K_{\mathit{kin}}$")
           (_stationery-start-finish-task-scale "$k_{\mathit{stat}}$")
           (_first-diff-square-integration-regular-scale "$k_{\mathit{sqr,1}}$")
           (_second-diff-square-integration-regular-scale "$k_{\mathit{sqr,2}}$")
@@ -192,6 +193,9 @@ Bスプラインを利用した軌道生成のためのコンフィギュレー�
     (joint-angle-margin 3.0) ;; [deg] [mm]
     (collision-pair-list)
     (keep-timing-order? t)
+    (kin-scale 1.0)
+    (kin-scale-list)
+    (kin-scale-mat-list)
     (stationery-start-finish-task-scale 0.0)
     (first-diff-square-integration-regular-scale 0.0)
     (second-diff-square-integration-regular-scale 0.0)
@@ -221,6 +225,25 @@ Initialize instance
    (setq _joint-angle-margin joint-angle-margin)
    (setq _collision-pair-list collision-pair-list)
    (setq _keep-timing-order? keep-timing-order?)
+   (cond (kin-scale-mat-list
+          (setq _kin-scale-mat-list kin-scale-mat-list)
+          )
+         (kin-scale-list
+          (setq _kin-scale-mat-list
+                (mapcar
+                 #'(lambda (sc)
+                     (cond ((numberp sc)
+                            (scale-matrix sc (unit-matrix 6))
+                            )
+                           (t
+                            (diagonal sc)
+                            )))
+                 kin-scale-list))
+          )
+         (kin-scale
+          (setq _kin-scale-mat-list
+                (make-list (length kin-target-coords-list) :initial-element (scale-matrix kin-scale (unit-matrix 6))))
+          ))
    (setq _stationery-start-finish-task-scale stationery-start-finish-task-scale)
    (setq _first-diff-square-integration-regular-scale first-diff-square-integration-regular-scale)
    (setq _second-diff-square-integration-regular-scale second-diff-square-integration-regular-scale)
@@ -679,43 +702,47 @@ return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
             float-vector
             (flatten
              (mapcar
-              #'(lambda (tm att-coords trg-coords pos-tol rot-tol)
+              #'(lambda (tm att-coords trg-coords sc-mat pos-tol rot-tol)
                   (send self :apply-theta-to-robot tm)
-                  (list
-                   (map
-                    float-vector
-                    #'(lambda (err)
-                        (cond ((< err (- pos-tol))
-                               (+ err pos-tol)
+                  (let* ((pos-diff
+                          (map
+                           float-vector
+                           #'(lambda (err)
+                               (cond ((< err (- pos-tol))
+                                      (+ err pos-tol)
+                                      )
+                                     ((< pos-tol err)
+                                      (- err pos-tol)
+                                      )
+                                     (t
+                                      0.0
+                                      ))
                                )
-                              ((< pos-tol err)
-                               (- err pos-tol)
+                           (scale 1e-3 (v- (send trg-coords :worldpos) (send att-coords :worldpos))) ;; [m]
+                           ))
+                         (rot-diff
+                          (map
+                           float-vector
+                           #'(lambda (err)
+                               (cond ((< err (- rot-tol))
+                                      (+ err rot-tol)
+                                      )
+                                     ((< rot-tol err)
+                                      (- err rot-tol)
+                                      )
+                                     (t
+                                      0.0
+                                      ))
                                )
-                              (t
-                               0.0
-                               ))
-                        )
-                    (scale 1e-3 (v- (send trg-coords :worldpos) (send att-coords :worldpos))) ;; [m]
-                    )
-                   (map
-                    float-vector
-                    #'(lambda (err)
-                        (cond ((< err (- rot-tol))
-                               (+ err rot-tol)
-                               )
-                              ((< rot-tol err)
-                               (- err rot-tol)
-                               )
-                              (t
-                               0.0
-                               ))
-                        )
-                    (matrix-log (m* (send trg-coords :worldrot) (transpose (send att-coords :worldrot)))) ;; [rad]
-                    )
-                   ))
+                           (matrix-log (m* (send trg-coords :worldrot) (transpose (send att-coords :worldrot)))) ;; [rad]
+                           ))
+                         )
+                    (transform sc-mat (concatenate float-vector pos-diff rot-diff))
+                    ))
               _kin-time-list
               _kin-attention-coords-list
               _kin-target-coords-list
+              _kin-scale-mat-list
               _kin-pos-tolerance-list
               _kin-rot-tolerance-list
               ))
@@ -791,22 +818,25 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{p}} \in \mathbb{R}^{
    (apply
     #'concatenate-matrix-column
     (mapcar
-     #'(lambda (tm att-coords)
+     #'(lambda (tm att-coords sc-mat)
          (send self :apply-theta-to-robot tm)
          (scale-matrix
           -1
           (m*
-           (send _robot :calc-jacobian-from-joint-list
-                 :union-joint-list _joint-list
-                 :move-target (list att-coords)
-                 :transform-coords (list (make-coords))
-                 :translation-axis (list t)
-                 :rotation-axis (list t)
-                 )
-           (send self :bspline-matrix tm)))
+           sc-mat
+           (m*
+            (send _robot :calc-jacobian-from-joint-list
+                  :union-joint-list _joint-list
+                  :move-target (list att-coords)
+                  :transform-coords (list (make-coords))
+                  :translation-axis (list t)
+                  :rotation-axis (list t)
+                  )
+            (send self :bspline-matrix tm))))
          )
      _kin-time-list
      _kin-attention-coords-list
+     _kin-scale-mat-list
      ))
    )
   (:kinematics-task-jacobian-with-timing-vector
@@ -852,13 +882,15 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{t}} \in \mathbb{R}^{
              (scale
               -1
               (transform
-               (send _robot :calc-jacobian-from-joint-list
-                     :union-joint-list _joint-list
-                     :move-target (list (elt _kin-attention-coords-list kin-idx))
-                     :transform-coords (list (make-coords))
-                     :translation-axis (list t)
-                     :rotation-axis (list t)
-                     )
+               (m*
+                (elt _kin-scale-mat-list kin-idx)
+                (send _robot :calc-jacobian-from-joint-list
+                      :union-joint-list _joint-list
+                      :move-target (list (elt _kin-attention-coords-list kin-idx))
+                      :transform-coords (list (make-coords))
+                      :translation-axis (list t)
+                      :rotation-axis (list t)
+                      ))
                (transform
                 (send self :control-matrix)
                 (transform
