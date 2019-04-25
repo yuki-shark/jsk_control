@@ -9,7 +9,7 @@
   <arg name="use_octomap"    default="false" />
   <arg name="use_obstacle"   default="false" />
   <arg name="use_pointcloud" default="true" />
-  <arg name="use_foothold_check"      default="true" />
+  <arg name="use_foothold_check"      default="false" />
   <arg name="use_footstep_controller" default="true" />
   <arg name="LAUNCH_TF_BUFFER_SERVER" default="true" />
   <arg name="USE_NORMAL" default="false" />
@@ -92,12 +92,16 @@
       ## offset from end-coords -> center of cube
       #lleg_footstep_offset: [0.0, 0.0, 0.0]
       #rleg_footstep_offset: [0.0, 0.0, 0.0]
-      lleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding
-      rleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding
+      <!-- lleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding -->
+      <!-- rleg_footstep_offset: [0.015, 0.0, 0.0] ## offset for padding -->
       ## without padding
       ##footstep_size_x: 0.230
-      footstep_size_x: 0.260 ## add toe padding
-      footstep_size_y: 0.135
+      <!-- footstep_size_x: 0.260 ## add toe padding -->
+      <!-- footstep_size_y: 0.135 -->
+      lleg_footstep_offset: [0.03, 0.0, 0.0] ## offset for padding
+      rleg_footstep_offset: [0.03, -0.0, 0.0] ## offset for padding
+      footstep_size_x: 0.280 ## add toe padding
+      footstep_size_y: 0.165
     </rosparam>
     <!-- parameters for plane estimation -->
     <rosparam subst_value="true">
@@ -135,8 +139,8 @@
       transition_limit_yaw:   0.4
     </rosparam>
     <rosparam>
-      support_check_x_sampling: 3
-      support_check_y_sampling: 3
+      support_check_x_sampling: 4
+      support_check_y_sampling: 4
       support_check_vertex_neighbor_threshold: 0.02
       support_padding_x: 0.0 ##
       support_padding_y: 0.0 ##
@@ -233,6 +237,37 @@
       - x: -0.04
         y: 0
         theta: -0.09
+# add
+      - x: -0.10
+        y: 0.04
+        theta: 0
+      - x: 0.10
+        y: 0.04
+        theta: 0
+      - x: 0.10
+        y: -0.04
+        theta: 0
+      - x: -0.10
+        y: -0.04
+        theta: 0
+      - x: -0.07
+        y: -0.07
+        theta: 0
+      - x: 0.09
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: -0.08
+        theta: -0.19
+      - x: 0.12
+        y: -0.08
+        theta: 0.19
+      - x: 0.14
+        y: -0.08
+        theta: 0
+      - x: -0.08
+        y: 0.03
+        theta: 0.19
     </rosparam>
   </node>
 
@@ -245,10 +280,14 @@
         frame_id: map
         lleg_end_coords: lleg_end_coords
         rleg_end_coords: rleg_end_coords
-        footstep_size_x: 0.237418
-        footstep_size_y: 0.134017
-        lleg_footstep_offset: [0.015502,  0.010078, 0.0]
-        rleg_footstep_offset: [0.015502, -0.010078, 0.0]
+        <!-- footstep_size_x: 0.237418 -->
+        <!-- footstep_size_y: 0.134017 -->
+        <!-- lleg_footstep_offset: [0.015502,  0.010078, 0.0] -->
+        <!-- rleg_footstep_offset: [0.015502, -0.010078, 0.0] -->
+        footstep_size_x: 0.2800
+        footstep_size_y: 0.1650
+        lleg_footstep_offset: [0.03,  0.0, 0.0]
+        rleg_footstep_offset: [0.03, -0.0, 0.0]
         default_footstep_margin: 0.2
         use_default_step_as_goal: true
       </rosparam>
