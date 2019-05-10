@@ -409,12 +409,17 @@ Override to support zero row matrix.
     (let* ((tmp-status)
            (ret)
            (first-trial? t)
+           (last-trial? nil)
+           (trial-num 11)
            )
       (setq tmp-status (float-vector 0))
-      (dotimes (i 10)
+      (dotimes (i trial-num)
+        (when (= i (1- trial-num))
+          (setq last-trial? t))
         (setq ret
               (apply #'solve-qp-with-transformation
-                     :transformation-matrix (if first-trial? nil (apply #'make-transformation-matrix args))
+                     :transformation-matrix
+                     (if (or first-trial? last-trial?) nil (apply #'make-transformation-matrix args))
                      (append
                       args
                       (if (find :status args) nil (list :status tmp-status)))
