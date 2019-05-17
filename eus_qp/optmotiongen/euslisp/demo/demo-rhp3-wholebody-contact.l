@@ -40,6 +40,22 @@
          (send (send (send *robot* :larm :end-coords) :copy-worldcoords)
                :transform
                (make-coords :pos #f(30 0 0) :rpy (list pi/2 0 -pi/2)))))
+  (send *robot* :put :rarm-hand-back-edge-contact-coords
+        (make-cascoords
+         :parent
+         (send (send *robot* :rarm :end-coords) :parent)
+         :coords
+         (send (send (send *robot* :rarm :end-coords) :copy-worldcoords)
+               :transform
+               (make-coords :pos #f(35 50 0) :rpy (list -pi/2 0 pi/2)))))
+  (send *robot* :put :larm-hand-back-edge-contact-coords
+        (make-cascoords
+         :parent
+         (send (send *robot* :larm :end-coords) :parent)
+         :coords
+         (send (send (send *robot* :larm :end-coords) :copy-worldcoords)
+               :transform
+               (make-coords :pos #f(35 -50 0) :rpy (list pi/2 0 -pi/2)))))
   ;;;; knee
   (send *robot* :put :lleg-knee-contact-coords
         (make-cascoords
@@ -61,8 +77,7 @@
          :coords
          (send
           (send (send *robot* :rarm :elbow-p :child-link) :copy-worldcoords)
-          :transform (make-coords :pos #f(-75 -40 0) :rpy (list 0 pi/2 0)))
-         ))
+          :transform (make-coords :pos #f(-85 -0 0) :rpy (list 0 pi/2 0)))))
   (send *robot* :put :larm-elbow-contact-coords
         (make-cascoords
          :parent
@@ -70,8 +85,7 @@
          :coords
          (send
           (send (send *robot* :larm :elbow-p :child-link) :copy-worldcoords)
-          :transform (make-coords :pos #f(-75 40 0) :rpy (list 0 pi/2 0)))
-         ))
+          :transform (make-coords :pos #f(-85 0 0) :rpy (list 0 pi/2 0)))))
   ;; save pose
   (send *robot* :reset-pose)
   (send *robot* :put :reset-pose-joint-angle-list (coerce (send *robot* :angle-vector) cons))
@@ -87,32 +101,52 @@
   (send *robot* :put :lleg-foot-contact-constraint
         (instance default-contact-constraint :init
                   :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
-                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -1.0 :l-max-y 1.0
+                  :l-min-x -10.0 :l-max-x 10.0 :l-min-y -10.0 :l-max-y 10.0
                   ))
   (send *robot* :put :rleg-foot-contact-constraint
         (instance default-contact-constraint :init
                   :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
-                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -1.0 :l-max-y 1.0
+                  :l-min-x -10.0 :l-max-x 10.0 :l-min-y -10.0 :l-max-y 10.0
                   ))
   (send *robot* :put :lleg-knee-contact-constraint
         (instance default-contact-constraint :init
                   :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
-                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -1.0 :l-max-y 1.0
+                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -10.0 :l-max-y 10.0
                   ))
   (send *robot* :put :rleg-knee-contact-constraint
         (instance default-contact-constraint :init
                   :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
-                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -1.0 :l-max-y 1.0
+                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -10.0 :l-max-y 10.0
                   ))
   (send *robot* :put :larm-hand-contact-constraint
         (instance default-contact-constraint :init
                   :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
-                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -1.0 :l-max-y 1.0
+                  :l-min-x -10.0 :l-max-x 10.0 :l-min-y -10.0 :l-max-y 10.0
                   ))
   (send *robot* :put :rarm-hand-contact-constraint
         (instance default-contact-constraint :init
                   :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
-                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -1.0 :l-max-y 1.0
+                  :l-min-x -10.0 :l-max-x 10.0 :l-min-y -10.0 :l-max-y 10.0
+                  ))
+  (send *robot* :put :larm-hand-back-edge-contact-constraint
+        (instance default-contact-constraint :init
+                  :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
+                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -10.0 :l-max-y 10.0
+                  ))
+  (send *robot* :put :rarm-hand-back-edge-contact-constraint
+        (instance default-contact-constraint :init
+                  :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
+                  :l-min-x -1.0 :l-max-x 1.0 :l-min-y -10.0 :l-max-y 10.0
+                  ))
+  (send *robot* :put :larm-elbow-contact-constraint
+        (instance default-contact-constraint :init
+                  :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
+                  :l-min-x -10.0 :l-max-x 10.0 :l-min-y -10.0 :l-max-y 10.0
+                  ))
+  (send *robot* :put :rarm-elbow-contact-constraint
+        (instance default-contact-constraint :init
+                  :mu-trans 0.1 :mu-rot 0.01 :max-fz 1000
+                  :l-min-x -10.0 :l-max-x 10.0 :l-min-y -10.0 :l-max-y 10.0
                   ))
   )
 
@@ -154,12 +188,52 @@
                         :translation-axis (list :x :y)
                         :rotation-axis t
                         :transform-coords (make-coords))
+              (instance contact-ik-arg :init
+                        :name :larm-hand-back-edge
+                        :target-coords (make-coords)
+                        :translation-axis (list :x :y)
+                        :rotation-axis (list :y)
+                        :transform-coords (make-coords))
+              (instance contact-ik-arg :init
+                        :name :rarm-hand-back-edge
+                        :target-coords (make-coords)
+                        :translation-axis (list :x :y)
+                        :rotation-axis (list :y)
+                        :transform-coords (make-coords))
+              (instance contact-ik-arg :init
+                        :name :larm-hand-back-edge2
+                        :target-coords (make-coords)
+                        :translation-axis (list :x :y)
+                        :rotation-axis (list :y)
+                        :transform-coords (make-coords))
+              (instance contact-ik-arg :init
+                        :name :rarm-hand-back-edge2
+                        :target-coords (make-coords)
+                        :translation-axis (list :x :y)
+                        :rotation-axis (list :y)
+                        :transform-coords (make-coords))
+              (instance contact-ik-arg :init
+                        :name :larm-elbow
+                        :target-coords (make-coords)
+                        :translation-axis (list :x :y)
+                        :rotation-axis t
+                        :transform-coords (make-coords))
+              (instance contact-ik-arg :init
+                        :name :rarm-elbow
+                        :target-coords (make-coords)
+                        :translation-axis (list :x :y)
+                        :rotation-axis t
+                        :transform-coords (make-coords))
               ))
   (setq *robot-env*
         (instance robot-environment :init :robot *robot* :contact-list *contact-list*))
   (send (send (send *robot-env* :contact :larm-hand) :joint :larm-hand-linear-joint-x)
         :min-angle 400.0)
   (send (send (send *robot-env* :contact :rarm-hand) :joint :rarm-hand-linear-joint-x)
+        :min-angle 400.0)
+  (send (send (send *robot-env* :contact :larm-elbow) :joint :larm-elbow-linear-joint-x)
+        :min-angle 400.0)
+  (send (send (send *robot-env* :contact :rarm-elbow) :joint :rarm-elbow-linear-joint-x)
         :min-angle 400.0)
   (send (send *robot-env* :contact :larm-hand) :put :pre-contact-coords
         (make-cascoords
@@ -193,8 +267,7 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -229,14 +302,13 @@
    *instant-config-task-list*
    )
 
-  (dotimes (i 3)
+  (dotimes (i 0)
     (push (copy-object *robot-env*) *robot-env-list*)
     (push
      (instance instant-configuration-task :init
                :name :knee-stand
                :robot-env (car *robot-env-list*)
-               :drive-joint-list
-               nil ;; (send (car *robot-env-list*) :drive-joint-list)
+               :drive-joint-list nil
                :kin-target-coords-list
                (list
                 (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -272,8 +344,7 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -308,8 +379,7 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -348,8 +418,7 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -388,54 +457,7 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
-             :kin-target-coords-list
-             (list
-              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
-              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
-              (send (send (car *robot-env-list*) :contact :larm-hand) :contact-coords)
-              (send (send (car *robot-env-list*) :contact :rarm-hand) :contact-coords)
-              )
-             :kin-attention-coords-list
-             (list
-              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
-              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
-              (send (car *robot-env-list*) :robot :get :larm-hand-contact-coords)
-              (send (car *robot-env-list*) :robot :get :rarm-hand-contact-coords)
-              )
-             :contact-target-coords-list
-             (list
-              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
-              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
-              (send (send (car *robot-env-list*) :contact :larm-hand) :contact-coords)
-              (send (send (car *robot-env-list*) :contact :rarm-hand) :contact-coords)
-              )
-             :contact-attention-coords-list
-             (list
-              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
-              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
-              (send (car *robot-env-list*) :robot :get :larm-hand-contact-coords)
-              (send (car *robot-env-list*) :robot :get :rarm-hand-contact-coords)
-              )
-             :contact-constraint-list
-             (list
-              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-constraint)
-              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-constraint)
-              (send (car *robot-env-list*) :robot :get :larm-hand-contact-constraint)
-              (send (car *robot-env-list*) :robot :get :rarm-hand-contact-constraint)
-              )
-             )
-   *instant-config-task-list*
-   )
-
-  (push (copy-object *robot-env*) *robot-env-list*)
-  (push
-   (instance instant-configuration-task :init
-             :name :knee-stand
-             :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -480,8 +502,52 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
+             :kin-target-coords-list
+             (list
+              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :contact :larm-hand) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-hand) :contact-coords)
+              )
+             :kin-attention-coords-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-hand-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-contact-coords)
+              )
+             :contact-target-coords-list
+             (list
+              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :contact :larm-hand) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-hand) :contact-coords)
+              )
+             :contact-attention-coords-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-hand-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-contact-coords)
+              )
+             :contact-constraint-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :larm-hand-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-contact-constraint)
+              )
+             )
+   *instant-config-task-list*
+   )
+
+  (push (copy-object *robot-env*) *robot-env-list*)
+  (push
+   (instance instant-configuration-task :init
+             :name :knee-stand
+             :robot-env (car *robot-env-list*)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -541,8 +607,7 @@
    (instance instant-configuration-task :init
              :name :knee-stand
              :robot-env (car *robot-env-list*)
-             :drive-joint-list
-             nil ;; (send (car *robot-env-list*) :drive-joint-list)
+             :drive-joint-list nil
              :kin-target-coords-list
              (list
               (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
@@ -581,6 +646,136 @@
               (send (car *robot-env-list*) :robot :get :rleg-foot-contact-constraint)
               (send (car *robot-env-list*) :robot :get :lleg-knee-contact-constraint)
               (send (car *robot-env-list*) :robot :get :rleg-knee-contact-constraint)
+              )
+             :posture-joint-list
+             (send (car *robot-env-list*) :robot :legs :knee-p)
+             :posture-joint-angle-list
+             (send (car *robot-env-list*) :robot :legs :knee-p :max-angle)
+             :target-posture-scale 1e3
+             )
+   *instant-config-task-list*
+   )
+
+  (push (copy-object *robot-env*) *robot-env-list*)
+  (push
+   (instance instant-configuration-task :init
+             :name :knee-stand
+             :robot-env (car *robot-env-list*)
+             :drive-joint-list nil
+             :kin-target-coords-list
+             (list
+              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :contact :lleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :larm-hand-back-edge) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-hand-back-edge) :contact-coords)
+              )
+             :kin-attention-coords-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :lleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-hand-back-edge-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-back-edge-contact-coords)
+              )
+             :contact-target-coords-list
+             (list
+              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :contact :lleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :larm-hand-back-edge) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-hand-back-edge) :contact-coords)
+              )
+             :contact-attention-coords-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :lleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-hand-back-edge-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-back-edge-contact-coords)
+              )
+             :contact-constraint-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :lleg-knee-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rleg-knee-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :larm-hand-back-edge-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-back-edge-contact-constraint)
+              )
+             :posture-joint-list
+             (send (car *robot-env-list*) :robot :legs :knee-p)
+             :posture-joint-angle-list
+             (send (car *robot-env-list*) :robot :legs :knee-p :max-angle)
+             :target-posture-scale 1e3
+             )
+   *instant-config-task-list*
+   )
+
+  (push (copy-object *robot-env*) *robot-env-list*)
+  (push
+   (instance instant-configuration-task :init
+             :name :knee-stand
+             :robot-env (car *robot-env-list*)
+             :drive-joint-list nil
+             :kin-target-coords-list
+             (list
+              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :contact :lleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :larm-hand-back-edge2) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-hand-back-edge2) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :larm-elbow) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-elbow) :contact-coords)
+              )
+             :kin-attention-coords-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :lleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-hand-back-edge-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-back-edge-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-elbow-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-elbow-contact-coords)
+              )
+             :contact-target-coords-list
+             (list
+              (send (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords) :copy-worldcoords)
+              (send (send (car *robot-env-list*) :contact :lleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rleg-knee) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :larm-hand-back-edge2) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-hand-back-edge2) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :larm-elbow) :contact-coords)
+              (send (send (car *robot-env-list*) :contact :rarm-elbow) :contact-coords)
+              )
+             :contact-attention-coords-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-coords)
+              (send (car *robot-env-list*) :robot :get :lleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rleg-knee-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-hand-back-edge-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-back-edge-contact-coords)
+              (send (car *robot-env-list*) :robot :get :larm-elbow-contact-coords)
+              (send (car *robot-env-list*) :robot :get :rarm-elbow-contact-coords)
+              )
+             :contact-constraint-list
+             (list
+              (send (car *robot-env-list*) :robot :get :lleg-foot-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rleg-foot-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :lleg-knee-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rleg-knee-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :larm-hand-back-edge-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rarm-hand-back-edge-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :larm-elbow-contact-constraint)
+              (send (car *robot-env-list*) :robot :get :rarm-elbow-contact-constraint)
               )
              :posture-joint-list
              (send (car *robot-env-list*) :robot :legs :knee-p)
@@ -605,7 +800,7 @@
 
   (setq *sqp-opt*
         (instance sqp-optimization :init :config-task *trajectory-config-task*))
-  (send *sqp-opt* :optimize :loop-num 30)
+  (send *sqp-opt* :optimize :loop-num 20)
 
   ;; save log
   (when (and (not (equal (send *sqp-opt* :status) :qp-error)) output-filename)
