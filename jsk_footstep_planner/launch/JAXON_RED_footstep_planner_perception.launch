@@ -10,6 +10,7 @@
   <arg name="use_obstacle"   default="true" />
   <arg name="use_pointcloud" default="true" />
   <arg name="use_footstep_controller" default="true" />
+  <arg name="use_safe_footstep_planner" default="true" />
   <arg name="LAUNCH_TF_BUFFER_SERVER" default="false" />
   <arg name="USE_NORMAL" default="false" />
 
@@ -41,15 +42,25 @@
     <arg name="input_cloud" value="$(arg obstacle_cloud)" />
   </include>
 
-  <!-- set default pose -->
-  <node pkg="safe_footstep_planner" type="look-down.l"
-        name="look_down" output="screen" />
+  <group if="$(arg use_safe_footstep_planner)">
+    <!-- set default pose -->
+    <node pkg="safe_footstep_planner" type="look-down.l"
+          name="look_down" output="screen" />
 
-  <!-- depth image creator -->
-  <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch">
-    <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" />
-    <arg name="rviz"                 value="false" />
-  </include>
+    <!-- depth image creator -->
+    <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch">
+      <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" />
+      <arg name="rviz"                 value="false" />
+    </include>
+
+    <include file="$(find safe_footstep_planner)/launch/color_labeling.launch">
+      <arg name="INPUT_IMAGE"  value="/depth_image_creator/output_image" />
+      <arg name="RED_LABEL"    value="1" />
+      <arg name="GREEN_LABEL"  value="2" />
+      <arg name="BLUE_LABEL"   value="3" />
+      <arg name="YELLOW_LABEL" value="4" />
+    </include>
+  </group>
 
   <!-- footstep planner -->
   <node pkg="jsk_footstep_planner" type="footstep_planner_node"
