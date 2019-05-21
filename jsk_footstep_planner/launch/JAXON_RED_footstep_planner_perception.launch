@@ -25,6 +25,8 @@
   <arg unless="$(arg USE_NORMAL)" name="input_point_cloud"
        value="$(arg point_cloud)" />
 
+  <env name="ROBOT" value="JAXON_RED" />
+
   <!-- nodes for perception -->
   <node if="$(arg USE_NORMAL)" pkg="jsk_pcl_ros" type="normal_estimation_omp" name="footstep_normal_estimation">
     <remap from="~input" to="$(arg point_cloud)" />
@@ -37,6 +39,16 @@
   <include if="$(arg use_octomap)"
            file="$(find jsk_robot_startup)/launch/slam_octomap.launch" >
     <arg name="input_cloud" value="$(arg obstacle_cloud)" />
+  </include>
+
+  <!-- set default pose -->
+  <node pkg="safe_footstep_planner" type="look-down.l"
+        name="look_down" output="screen" />
+
+  <!-- depth image creator -->
+  <include file="$(find safe_footstep_planner)/launch/depth_image_creator.launch">
+    <arg name="MANAGER"              value="depth_image_creator_nodelet_manager" />
+    <arg name="rviz"                 value="false" />
   </include>
 
   <!-- footstep planner -->
@@ -265,6 +277,7 @@
 
   <node pkg="rviz" type="rviz" name="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_footstep_planner_perception.rviz"
+        respawn="true"
         if="$(arg rviz)"/>
 
   <node pkg="tf2_ros" type="buffer_server" name="tf2_buffer_server"
