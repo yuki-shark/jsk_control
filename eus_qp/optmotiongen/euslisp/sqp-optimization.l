@@ -1,5 +1,4 @@
 (load "./util.l")
-(load "package://eus_qpoases/euslisp/eus-qpoases.l")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;

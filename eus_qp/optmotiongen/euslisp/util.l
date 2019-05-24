@@ -1,3 +1,5 @@
+(load "package://eus_qpoases/euslisp/eus-qpoases.l")
+(load "package://eus_osqp/euslisp/eus-osqp.l")
 (load "package://eus_qp/euslisp/contact-optimization.l")
 
 
@@ -437,7 +439,10 @@ Override to support zero row matrix.
 
 (defun solve-qp-with-transformation
   (&key
-   (qp-solver #'solve-qpoases-qp)
+   (qp-solver
+    ;; #'solve-osqp-qp
+    #'solve-qpoases-qp
+    )
    ((:transformation-matrix trans-mat))
    (status (float-vector 0))
    (initial-state)
