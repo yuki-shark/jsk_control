@@ -55,6 +55,7 @@
 
     <include file="$(find safe_footstep_planner)/launch/color_labeling.launch">
       <arg name="INPUT_IMAGE"  value="/depth_image_creator/output_image" />
+      <!-- <arg name="INPUT_IMAGE"  value="/multisense_local/left/image_rect_color" /> -->
       <arg name="RED_LABEL"    value="1" />
       <arg name="GREEN_LABEL"  value="2" />
       <arg name="BLUE_LABEL"   value="3" />
