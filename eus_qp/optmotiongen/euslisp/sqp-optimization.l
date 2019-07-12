@@ -29,6 +29,26 @@
 
 instant-configuration-taskクラスやtrajectory-configuration-taskクラスのinstance (以降，configuration-taskと呼ぶ)が与えられた時に，
 configuration-taskのタスク関数ノルム二乗$\|\bm{e}(\bm{q})\|^2$を最小にするコンフィギュレーション$\bm{q}$を反復計算により求める．
+
+configuration-taskに必要なメソッドは以下の通り．
+\begin{itemize}
+\setlength{\itemindent}{10mm}
+\setlength{\leftskip}{-10mm}
+  \item :dim-config
+  \item :set-config
+  \item :task-value
+  \item :task-jacobian
+  \item :regular-matrix
+  \item :regular-vector
+  \item :config-equality-constraint-matrix
+  \item :config-equality-constraint-vector
+  \item :config-inequality-constraint-matrix
+  \item :config-inequality-constraint-vector
+  \item :update-viewer
+  \item :print-status
+  \item :print-setting-information (optional)
+  \item :update-collision-inequality-constraint (optional)
+\end{itemize}
   "
   )
 
