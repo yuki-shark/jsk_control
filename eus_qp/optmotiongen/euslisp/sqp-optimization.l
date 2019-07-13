@@ -46,6 +46,7 @@ configuration-taskに必要なメソッドは以下の通り．
   \item :config-inequality-constraint-vector
   \item :update-viewer
   \item :print-status
+  \item :config-vector (necessary only for jacobian validation)
   \item :print-setting-information (optional)
   \item :update-collision-inequality-constraint (optional)
 \end{itemize}
