@@ -656,6 +656,24 @@ return $\mathcal{T}^{\mathit{kin\mathchar`-att}} := \{T_1^{\mathit{kin\mathchar`
    "
    _kin-attention-coords-list
    )
+  (:kin-attention-coords
+   (&key
+    (name)
+    (coords)
+    )
+   "
+set / get $T_i^{\mathit{kin\mathchar`-att}}$
+   "
+   (let* ((idx
+           (position-if #'(lambda (c) (equal (send c :name) name)) _kin-attention-coords-list))
+          )
+     (cond (coords
+            (setf (elt _kin-attention-coords-list idx) coords)
+            )
+           (t
+            (elt _kin-attention-coords-list idx)
+            ))
+     ))
   (:contact-target-coords-list
    ()
    "
@@ -678,6 +696,24 @@ return $\mathcal{T}^{\mathit{cnt\mathchar`-att}} := \{T_1^{\mathit{cnt\mathchar`
    "
    _contact-attention-coords-list
    )
+  (:contact-attention-coords
+   (&key
+    (name)
+    (coords)
+    )
+   "
+set / get $T_i^{\mathit{cnt\mathchar`-att}}$
+   "
+   (let* ((idx
+           (position-if #'(lambda (c) (equal (send c :name) name)) _contact-attention-coords-list))
+          )
+     (cond (coords
+            (setf (elt _contact-attention-coords-list idx) coords)
+            )
+           (t
+            (elt _contact-attention-coords-list idx)
+            ))
+     ))
   (:contact-constraint-list
    ()
    "
@@ -2518,9 +2554,11 @@ Print status.
    (unless _only-kinematics?
      (warning-message 9 "|eom-trans-task|=~a~%" (norm (send self :eom-trans-task-value :update? nil)))
      (warning-message 9 "|eom-rot-task|=~a~%" (norm (send self :eom-rot-task-value :update? nil)))
-     (warning-message 9 "|torque-task|=~a~%" (norm (send self :torque-task-value :update? nil)))
+     (when (> _num-drive-joint 0)
+       (warning-message 9 "|torque-task|=~a~%" (norm (send self :torque-task-value :update? nil))))
      )
-   (warning-message 9 "|posture-task|=~a~%" (norm (send self :posture-task-value :update? nil)))
+   (when (> _num-posture-joint 0)
+     (warning-message 9 "|posture-task|=~a~%" (norm (send self :posture-task-value :update? nil))))
    )
   (:_get-contact-index-from-limb ;; used in trajectory-configuration-task
    (&key (limb))
