@@ -2,6 +2,7 @@
 
 (require :unittest "lib/llib/unittest.l")
 (load "../euslisp/sample/sample-samplerobot.l")
+(load "../euslisp/sample/sample-sqp-optimization-compound.l")
 
 
 (init-unit-test)
@@ -36,6 +37,20 @@
                 :graph-filename nil
                 ))
   (assert (< (norm (send *bspline-dynamic-config-task* :task-value :update? nil)) 100.0))
+  )
+
+(deftest test-sample-sqp-optimization-compound
+  (null-output (sample-sqp-optimization-compound
+                :avoid-collision? nil
+                :loop-num 10
+                ))
+  (assert (< (norm (send *compound-config-task* :task-value :update? nil)) 1.0))
+
+  (null-output (sample-sqp-optimization-compound
+                :avoid-collision? t
+                :loop-num 15
+                ))
+  (assert (< (norm (send *compound-config-task* :task-value :update? nil)) 1.0))
   )
 
 

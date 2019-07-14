@@ -10,6 +10,7 @@
 (defun sample-sqp-optimization-compound
     (&key
      (avoid-collision? t)
+     (loop-num 50)
      (pre-process-func)
      &allow-other-keys
      )
@@ -135,6 +136,6 @@
                         ;; (validate-jacobian :config-task (send sqp :config-task))
                         ))
                   ))
-  (send *sqp-opt* :optimize :loop-num 50)
+  (send *sqp-opt* :optimize :loop-num loop-num)
   )
 (warn "(sample-sqp-optimization-compound)~%")
