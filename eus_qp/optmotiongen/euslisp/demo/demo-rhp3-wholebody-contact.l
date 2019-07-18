@@ -13,12 +13,14 @@
   ;;;; foot
   (send *robot* :put :rleg-foot-contact-coords
         (make-cascoords
+         :name :rleg-foot-contact-coords
          :parent
          (send (send *robot* :rleg :end-coords) :parent)
          :coords
          (send (send *robot* :rleg :end-coords) :copy-worldcoords)))
   (send *robot* :put :lleg-foot-contact-coords
         (make-cascoords
+         :name :lleg-foot-contact-coords
          :parent
          (send (send *robot* :lleg :end-coords) :parent)
          :coords
@@ -26,6 +28,7 @@
   ;;;; hand
   (send *robot* :put :rarm-hand-contact-coords
         (make-cascoords
+         :name :rarm-hand-contact-coords
          :parent
          (send (send *robot* :rarm :end-coords) :parent)
          :coords
@@ -34,6 +37,7 @@
                (make-coords :pos #f(30 0 0) :rpy (list -pi/2 0 pi/2)))))
   (send *robot* :put :larm-hand-contact-coords
         (make-cascoords
+         :name :larm-hand-contact-coords
          :parent
          (send (send *robot* :larm :end-coords) :parent)
          :coords
@@ -42,6 +46,7 @@
                (make-coords :pos #f(30 0 0) :rpy (list pi/2 0 -pi/2)))))
   (send *robot* :put :rarm-hand-back-edge-contact-coords
         (make-cascoords
+         :name :rarm-hand-back-edge-contact-coords
          :parent
          (send (send *robot* :rarm :end-coords) :parent)
          :coords
@@ -50,6 +55,7 @@
                (make-coords :pos #f(35 50 0) :rpy (list -pi/2 0 pi/2)))))
   (send *robot* :put :larm-hand-back-edge-contact-coords
         (make-cascoords
+         :name :larm-hand-back-edge-contact-coords
          :parent
          (send (send *robot* :larm :end-coords) :parent)
          :coords
@@ -59,12 +65,14 @@
   ;;;; knee
   (send *robot* :put :lleg-knee-contact-coords
         (make-cascoords
+         :name :lleg-knee-contact-coords
          :parent (send (send *robot* :lleg :knee-p) :child-link)
          :coords
          (send (send (send (send *robot* :lleg :knee-p) :child-link) :copy-worldcoords)
                :transform (make-coords :pos #f(110 0 0) :rpy (list 0 -pi/2 0)))))
   (send *robot* :put :rleg-knee-contact-coords
         (make-cascoords
+         :name :rleg-knee-contact-coords
          :parent (send (send *robot* :rleg :knee-p) :child-link)
          :coords
          (send (send (send (send *robot* :rleg :knee-p) :child-link) :copy-worldcoords)
@@ -72,6 +80,7 @@
   ;;;; elbow
   (send *robot* :put :rarm-elbow-contact-coords
         (make-cascoords
+         :name :rarm-elbow-contact-coords
          :parent
          (send *robot* :rarm :elbow-p :child-link)
          :coords
@@ -80,6 +89,7 @@
           :transform (make-coords :pos #f(-85 -0 0) :rpy (list 0 pi/2 0)))))
   (send *robot* :put :larm-elbow-contact-coords
         (make-cascoords
+         :name :larm-elbow-contact-coords
          :parent
          (send *robot* :larm :elbow-p :child-link)
          :coords
