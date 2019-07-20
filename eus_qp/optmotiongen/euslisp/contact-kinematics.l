@@ -26,12 +26,16 @@
 Initialize instance
    "
    (send-super :init :name name)
-   (let (vl-list-root vj-list-root)
+   (let* (vl-list-root
+          vj-list-root
+          (string-name
+           (string-left-trim ":" (format nil "~a" name)))
+          )
      ;; 1. setup link
      (setq vl-list-root
            (mapcar #'(lambda (i)
                        (instance bodyset-link :init (make-cascoords) :bodies (list (make-cube 1e-3 1e-3 1e-3))
-                                 :name (read-from-string (format nil ":~a-virtual-~a" name i))
+                                 :name (read-from-string (format nil ":~a-virtual-~a" string-name i))
                                  :weight 0.0
                                  ))
                    (range 4)))
@@ -57,9 +61,9 @@ Initialize instance
                                  ))
                    (list linear-joint linear-joint rotational-joint)
                    (list :x :y :z)
-                   (list (read-from-string (format nil ":~a-root-virtual-x" (send self :name)))
-                         (read-from-string (format nil ":~a-root-virtual-y" (send self :name)))
-                         (read-from-string (format nil ":~a-root-virtual-yaw" (send self :name))))
+                   (list (read-from-string (format nil ":~a-root-virtual-x" string-name))
+                         (read-from-string (format nil ":~a-root-virtual-y" string-name))
+                         (read-from-string (format nil ":~a-root-virtual-yaw" string-name)))
                    (butlast vl-list-root)
                    (cdr vl-list-root)
                    ))
