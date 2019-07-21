@@ -224,3 +224,105 @@ return $T_{\mathit{cnt}} := \{ \bm{p}_{\mathit{cnt}}, \bm{R}_{\mathit{cnt}} \}$
    (forward-message-to _contact-coords args)
    )
   )
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;
+;; util
+;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun attach-additional-end-link
+    (&key
+     (robot *robot*)
+     (target-root-link)
+     (target-end-link)
+     (translation-axis)
+     (rotation-axis)
+     (joint-coords (send target-end-link :worldcoords))
+     (name (send target-end-link :name))
+     )
+  "
+Attach additional end link to cascaded-link.
+This function can be used for attaching the object link to the robot hand link with rotational freedom.
+   "
+  (let* (additional-ll
+         additional-jl
+         (string-name
+          (string-left-trim ":" (format nil "~a" name)))
+         (translation-joint-axis
+          (if (atom translation-axis) (ik-arg-axis->axis-list translation-axis) translation-axis))
+         (rotation-joint-axis
+          (if (atom rotation-axis) (ik-arg-axis->axis-list rotation-axis) rotation-axis))
+         (joint-class-list
+          (append (make-list (length translation-joint-axis) :initial-element linear-joint)
+                  (make-list (length rotation-joint-axis) :initial-element rotational-joint)))
+         (joint-axis-list
+          (append translation-joint-axis rotation-joint-axis))
+         )
+    ;; 1. setup link
+    (setq additional-ll
+          (append
+           (list target-root-link)
+           (mapcar
+            #'(lambda (joint-class
+                       joint-axis
+                       )
+                (instance bodyset-link :init
+                          (make-cascoords :coords (send joint-coords :copy-worldcoords))
+                          :bodies (list (make-cube 1e-3 1e-3 1e-3))
+                          :name
+                          (read-from-string
+                           (format nil ":~a-~a-~a" string-name (send joint-class :name) (symbol-name joint-axis)))
+                          :weight 0.0
+                          ))
+            ;; butlast is necessary because end-link is given as argument
+            (butlast joint-class-list)
+            (butlast joint-axis-list)
+            )
+           (list target-end-link)
+           ))
+    (dotimes (i (1- (length additional-ll)))
+      (send (elt additional-ll i) :assoc (elt additional-ll (1+ i))))
+    ;; 2. setup joint
+    (setq additional-jl
+          (mapcar
+           #'(lambda (joint-class
+                      joint-axis
+                      parent-link
+                      child-link
+                      )
+               (instance joint-class :init
+                         :name
+                         (read-from-string
+                          (format nil ":~a-~a-~a" string-name (send joint-class :name) (symbol-name joint-axis)))
+                         :parent-link parent-link :child-link child-link
+                         :axis joint-axis :min -1e10 :max 1e10
+                         :max-joint-torque 0.0
+                         ))
+           joint-class-list
+           joint-axis-list
+           (butlast additional-ll)
+           (cdr additional-ll)
+           ))
+    ;; 3. init-ending
+    (mapcar #'(lambda (jnt
+                       parent-link
+                       child-link
+                       )
+                (send child-link :add-joint jnt)
+                (send child-link :add-parent-link parent-link)
+                (send parent-link :add-child-links child-link)
+                )
+            additional-jl
+            (butlast additional-ll)
+            (cdr additional-ll)
+            )
+    ;; set cascaded-link instance
+    (send robot :set-val 'links
+          (append (send robot :get-val 'links) (cdr additional-ll))) ;; first additional-ll is already contained
+    (send robot :set-val 'joint-list
+          (append (send robot :get-val 'joint-list) additional-jl))
+    (send robot :set-val 'bodies
+          (append (send robot :get-val 'bodies) (send target-end-link :bodies)))
+    (send robot :update-descendants)
+    robot
+    ))
