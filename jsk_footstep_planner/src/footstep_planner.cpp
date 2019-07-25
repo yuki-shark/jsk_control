@@ -894,8 +894,11 @@ namespace jsk_footstep_planner
             break;
           }
         }
-      } else {
-        ROS_ERROR("Failed to get label image or know labels");
+        Eigen::Matrix3f state_rot_ = state_pose_.rotation();
+        std::cout << "path : " << i << std::endl;
+        Eigen::Vector3f z(0, 0, 1);
+        std::cout << (state_rot_ * z).transpose() << std::endl;
+        std::cout << (state_rot_ * z)[2] << std::endl;
       }
     }
     // finalize in graph

@@ -538,6 +538,9 @@ namespace jsk_footstep_planner
         tree.radiusSearch(pc, vertex_threshold, kdl_indices, kdl_distances, minimum_points) > minimum_points - 1 &&
         tree.radiusSearch(pd, vertex_threshold, kdl_indices, kdl_distances, minimum_points) > minimum_points - 1) {
 
+      Eigen::Matrix3f state_rot_ = pose.rotation();
+      Eigen::Vector3f z(0, 0, 1);
+      if ((state_rot_ * z)[2] < 0.995) return CLOSE_TO_SUPPORTED;
       return SUPPORTED;
     }
     else {
