@@ -80,7 +80,7 @@ namespace jsk_footstep_planner
       return "unknown error";
     }
   }
-  
+
   jsk_footstep_msgs::Footstep::Ptr
   FootstepState::toROSMsg()
   {
@@ -150,7 +150,7 @@ namespace jsk_footstep_planner
     //ret->indices = std::vector<int>(set_indices.begin(), set_indices.end());
     return ret;
   }
-  
+
   pcl::PointIndices::Ptr
   FootstepState::cropPointCloud(pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
                                 ANNGrid::Ptr grid_search,
@@ -164,7 +164,7 @@ namespace jsk_footstep_planner
     grid_search->approximateSearchInBox(a, b, c, d, *near_indices);
     return cropPointCloudExact(cloud, near_indices, padding_x, padding_y);
   }
-  
+
 #if 0
   pcl::PointIndices::Ptr
   FootstepState::cropPointCloud(pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
@@ -205,7 +205,7 @@ namespace jsk_footstep_planner
              a_30.isCrossing(b_23) ||
              a_30.isCrossing(b_30));
   }
-  
+
   FootstepState::Ptr
   FootstepState::projectToCloud(pcl::KdTreeFLANN<pcl::PointNormal>& tree,
                                 pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
@@ -261,7 +261,8 @@ namespace jsk_footstep_planner
         pose_, cloud, tree, indices,
         parameters.support_check_x_sampling,
         parameters.support_check_y_sampling,
-        parameters.support_check_vertex_neighbor_threshold);
+        parameters.support_check_vertex_neighbor_threshold,
+        parameters.support_minimum_points);
       DEBUG_PRINT("[FS state] pre / (!skip_cropping) projection state " << presupport_state);
     }
     if (presupport_state == projection_state::success) {
@@ -341,7 +342,7 @@ namespace jsk_footstep_planner
       Eigen::Vector3f p(pose_.translation());
       double alpha = (- plane.getD() - n.dot(p)) / (n.dot(z));
       Eigen::Vector3f q = p + alpha * z;
-      
+
       Eigen::Affine3f new_pose = Eigen::Translation3f(q) * new_rot;
       // std::cout << "new_pose: " << std::endl << new_pose.matrix() << std::endl;
       // std::cout << "q: " << std::endl << q << std::endl;
@@ -433,7 +434,8 @@ namespace jsk_footstep_planner
           new_pose, cloud, tree, inliers,
           parameters.support_check_x_sampling,
           parameters.support_check_y_sampling,
-          parameters.support_check_vertex_neighbor_threshold);
+          parameters.support_check_vertex_neighbor_threshold,
+          parameters.support_minimum_points);
         DEBUG_PRINT( "[FS state] (!skip_cropping) projection state " << support_state );
       }
       if (support_state == NOT_SUPPORTED) {
@@ -462,7 +464,7 @@ namespace jsk_footstep_planner
       }
     }
   }
-  
+
   FootstepSupportState
   FootstepState::isSupportedByPointCloud(const Eigen::Affine3f& pose,
                                          pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
@@ -470,7 +472,8 @@ namespace jsk_footstep_planner
                                          pcl::PointIndices::Ptr inliers,
                                          const int foot_x_sampling_num,
                                          const int foot_y_sampling_num,
-                                         const double vertex_threshold)
+                                         const double vertex_threshold,
+                                         const int minimum_points)
   {
     const double dx = dimensions_[0] / foot_x_sampling_num;
     const double dy = dimensions_[1] / foot_y_sampling_num;
@@ -481,7 +484,7 @@ namespace jsk_footstep_planner
       Eigen::Translation3f(- ux * dimensions_[0] / 2.0) *
       Eigen::Translation3f(- uy * dimensions_[1] / 2.0);
     const Eigen::Affine3f inv_pose = new_origin.inverse();
-    
+
     bool occupiedp[foot_x_sampling_num][foot_y_sampling_num];
     // Initialize by false
     for (size_t i = 0; i < foot_x_sampling_num; i++) {
@@ -489,7 +492,7 @@ namespace jsk_footstep_planner
         occupiedp[i][j] = false;
       }
     }
-    
+
     for (size_t i = 0; i < inliers->indices.size(); i++) {
       pcl::PointNormal pp = cloud->points[inliers->indices[i]];
       const Eigen::Vector3f p = pp.getVector3fMap();
@@ -523,18 +526,25 @@ namespace jsk_footstep_planner
     p.getVector3fMap() = Eigen::Vector3f(pose.translation());
     std::vector<int> kdl_indices;
     std::vector<float> kdl_distances;
-    if (tree.radiusSearch(p, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
-        tree.radiusSearch(pa, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
-        tree.radiusSearch(pb, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
-        tree.radiusSearch(pc, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
-        tree.radiusSearch(pd, vertex_threshold, kdl_indices, kdl_distances, 1) > 0) {
+    // if (tree.radiusSearch(p, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
+    //     tree.radiusSearch(pa, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
+    //     tree.radiusSearch(pb, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
+    //     tree.radiusSearch(pc, vertex_threshold, kdl_indices, kdl_distances, 1) > 0 &&
+    //     tree.radiusSearch(pd, vertex_threshold, kdl_indices, kdl_distances, 1) > 0) {
+    //   return SUPPORTED;
+    // }
+    if (tree.radiusSearch(pa, vertex_threshold, kdl_indices, kdl_distances, minimum_points) > minimum_points - 1 &&
+        tree.radiusSearch(pb, vertex_threshold, kdl_indices, kdl_distances, minimum_points) > minimum_points - 1 &&
+        tree.radiusSearch(pc, vertex_threshold, kdl_indices, kdl_distances, minimum_points) > minimum_points - 1 &&
+        tree.radiusSearch(pd, vertex_threshold, kdl_indices, kdl_distances, minimum_points) > minimum_points - 1) {
+
       return SUPPORTED;
     }
     else {
       return CLOSE_TO_SUPPORTED;
     }
   }
-  
+
   FootstepSupportState
   FootstepState::isSupportedByPointCloudWithoutCropping(
     const Eigen::Affine3f& pose,
@@ -560,7 +570,7 @@ namespace jsk_footstep_planner
     std::vector<int> kdl_indices;
     std::vector<float> kdl_distances;
     size_t success_count = 0;
-    
+
     if (tree.radiusSearch(p, vertex_threshold, kdl_indices, kdl_distances, 1) > 0) {
       ++success_count;
     }
@@ -586,9 +596,9 @@ namespace jsk_footstep_planner
       return NOT_SUPPORTED;
     }
   }
-  
 
-  
+
+
   FootstepState::Ptr FootstepState::fromROSMsg(const jsk_footstep_msgs::Footstep& f,
                                                const Eigen::Vector3f& size,
                                                const Eigen::Vector3f& resolution)
@@ -611,5 +621,5 @@ namespace jsk_footstep_planner
     return pos * rot;
     //return rot * pos;
   }
-  
+
 }

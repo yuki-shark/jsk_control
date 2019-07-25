@@ -69,14 +69,14 @@ namespace jsk_footstep_planner
   }
 
   std::string projectStateToString(unsigned int state);
-  
+
   enum FootstepSupportState
   {
     NOT_SUPPORTED,
     SUPPORTED,
     CLOSE_TO_SUPPORTED,
   };
-  
+
   class FootstepState
   {
   public:
@@ -114,7 +114,7 @@ namespace jsk_footstep_planner
     FootstepState::Ptr fromROSMsg(const jsk_footstep_msgs::Footstep& f,
                                   const Eigen::Vector3f& size,
                                   const Eigen::Vector3f& resolution);
-    
+
     inline float cross2d(const Eigen::Vector2f& a, const Eigen::Vector2f& b) const
     {
       return a[0] * b[1] - a[1] * b[0];
@@ -151,7 +151,7 @@ namespace jsk_footstep_planner
                    const Eigen::Vector3f& z,
                    unsigned int& error_state,
                    FootstepParameters &parameters);
-    
+
 #if 0
     pcl::PointIndices::Ptr
     cropPointCloud(pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
@@ -190,19 +190,19 @@ namespace jsk_footstep_planner
       c = Eigen::Vector3f((pose_ * Eigen::Translation3f(- ux * dim0 / 2 - uy * dim1 / 2)).translation());
       d = Eigen::Vector3f((pose_ * Eigen::Translation3f(  ux * dim0 / 2 - uy * dim1 / 2)).translation());
     }
-    
+
     /**
      * @brief
      * return true if this and other are collision free.
      */
     virtual bool crossCheck(FootstepState::Ptr other, float collision_padding = 0);
-    
+
     virtual Eigen::Affine3f getPose() const { return pose_; }
     virtual void setPose(const Eigen::Affine3f& pose)
     {
       pose_ = pose;
     }
-    
+
     virtual int getLeg() const { return leg_; }
     virtual Eigen::Vector3f getDimensions() const { return dimensions_; }
     bool operator==(FootstepState& other)
@@ -213,7 +213,7 @@ namespace jsk_footstep_planner
     }
 
     virtual Eigen::Vector3f getResolution() const { return resolution_; }
-      
+
 
     inline virtual int indexX() { return index_x_; }
     inline virtual int indexY() { return index_y_; }
@@ -227,7 +227,8 @@ namespace jsk_footstep_planner
                             pcl::PointIndices::Ptr inliers,
                             const int foot_x_sampling_num,
                             const int foot_y_sampling_num,
-                            const double vertex_threshold);
+                            const double vertex_threshold,
+                            const int minimum_points);
     virtual FootstepSupportState
     isSupportedByPointCloudWithoutCropping(const Eigen::Affine3f& pose,
                                            pcl::PointCloud<pcl::PointNormal>::Ptr cloud,
@@ -236,7 +237,7 @@ namespace jsk_footstep_planner
                                            const int foot_x_sampling_num,
                                            const int foot_y_sampling_num,
                                            const double vertex_threshold);
-    
+
     virtual Eigen::Affine3f midcoords(const FootstepState& other);
   protected:
     Eigen::Affine3f pose_;
@@ -248,7 +249,7 @@ namespace jsk_footstep_planner
     int index_yaw_;
     bool debug_print_;
   private:
-    
+
   };
 
   inline size_t hash_value(const FootstepState::Ptr& s)
@@ -256,7 +257,7 @@ namespace jsk_footstep_planner
     return std::abs(s->indexX()) << (25 + 14) + std::abs(s->indexY()) << 14
       + std::abs(s->indexT());
   }
-  
+
 }
 
 #endif

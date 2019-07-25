@@ -151,6 +151,7 @@
       support_check_x_sampling: 4
       support_check_y_sampling: 4
       support_check_vertex_neighbor_threshold: 0.02
+      support_minimum_points: 10
       support_padding_x: 0.0 ##
       support_padding_y: 0.0 ##
     </rosparam>

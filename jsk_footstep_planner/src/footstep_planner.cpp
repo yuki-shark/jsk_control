@@ -1186,6 +1186,7 @@ namespace jsk_footstep_planner
     parameters_.plane_estimation_outlier_threshold = config.plane_estimation_outlier_threshold;
     parameters_.support_check_x_sampling = config.support_check_x_sampling;
     parameters_.support_check_y_sampling = config.support_check_y_sampling;
+    parameters_.support_minimum_points = config.support_minimum_points;
     parameters_.support_check_vertex_neighbor_threshold = config.support_check_vertex_neighbor_threshold;
     parameters_.support_padding_x = config.support_padding_x;
     parameters_.support_padding_y = config.support_padding_y;
