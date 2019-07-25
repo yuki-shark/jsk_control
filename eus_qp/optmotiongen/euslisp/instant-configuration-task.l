@@ -754,6 +754,13 @@ set / get $\{ \bm{w}_1^{\mathit{ex}}, \bm{w}_2^{\mathit{ex}}, \cdots, \bm{w}_{N_
           (setq _external-wrench-list new-external-wrench-list)
           ))
    )
+  (:external-coords-list
+   ()
+   "
+return $\{T_1^{\mathit{ex}}, T_2^{\mathit{ex}}, \cdots, T_{N_{\mathit{ex}}}^{\mathit{ex}} \}$
+   "
+   _external-coords-list
+   )
   (:external-force-list
    ()
 "
