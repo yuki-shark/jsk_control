@@ -34,8 +34,10 @@
           (_dim-variant-config "$\mathit{dim}(\bm{q}_{\mathit{var}})$")
           (_dim-invariant-config "$\mathit{dim}(\bm{q}_{\mathit{invar}})$")
           (_dim-config "$\mathit{dim}(\bm{q})$")
+          (_dim-kin "$\mathit{dim}(\bm{e}^{\mathit{kin}})$")
           (_dim-task "$\mathit{dim}(\bm{e})$")
           ;; scale
+          (_kin-rotation-type "rotation type of kinematics task (:axis-angle or :normal)")
           (_kin-scale-mat-list "$K_{\mathit{kin}}$")
           (_target-posture-scale-list "$k_{\mathit{posture}}$")
           (_norm-regular-scale-max "$k_{\mathit{max}}$")
@@ -194,6 +196,7 @@ $\bm{\hat{w}}$は次式のように，全接触部位でのワールド座標系
     (collision-pair-list)
     (collision-distance-margin 0.01) ;; [m]
     (collision-distance-margin-list) ;; [m]
+    (kin-rotation-type)
     (kin-scale 1.0)
     (kin-scale-list)
     (kin-scale-mat-list)
@@ -233,24 +236,32 @@ Initialize instance
    (setq _collision-distance-margin-list
          (or collision-distance-margin-list
              (make-list (length _collision-pair-list) :initial-element collision-distance-margin)))
+   (setq _kin-rotation-type
+         (or kin-rotation-type
+             (make-list (length kin-target-coords-list) :initial-element :axis-angle)))
    (cond (kin-scale-mat-list
           (setq _kin-scale-mat-list kin-scale-mat-list)
           )
          (kin-scale-list
           (setq _kin-scale-mat-list
                 (mapcar
-                 #'(lambda (sc)
+                 #'(lambda (sc rot-type)
                      (cond ((numberp sc)
-                            (scale-matrix sc (unit-matrix 6))
+                            (scale-matrix sc (unit-matrix (if (equal rot-type :normal) 4 6)))
                             )
                            (t
                             (diagonal sc)
                             )))
-                 kin-scale-list))
+                 kin-scale-list
+                 _kin-rotation-type
+                 ))
           )
          (kin-scale
           (setq _kin-scale-mat-list
-                (make-list (length kin-target-coords-list) :initial-element (scale-matrix kin-scale (unit-matrix 6))))
+                (mapcar
+                 #'(lambda (rot-type)
+                     (scale-matrix kin-scale (unit-matrix (if (equal rot-type :normal) 4 6))))
+                 _kin-rotation-type))
           ))
    (cond (target-posture-scale-list
           (setq _target-posture-scale-list target-posture-scale-list)
@@ -297,11 +308,12 @@ Initialize instance
    (setq _dim-variant-config (+ _dim-theta _dim-wrench _dim-torque))
    (setq _dim-invariant-config _dim-phi)
    (setq _dim-config (+ _dim-variant-config _dim-invariant-config))
+   (setq _dim-kin (apply #'+ (mapcar #'(lambda (rot-type) (if (equal rot-type :normal) 4 6)) _kin-rotation-type)))
    (cond (_only-kinematics?
-          (setq _dim-task (+ (* 6 _num-kin) _num-posture-joint))
+          (setq _dim-task (+ _dim-kin _num-posture-joint))
           )
          (t
-          (setq _dim-task (+ (* 6 _num-kin) 3 3 _num-drive-joint _num-posture-joint))
+          (setq _dim-task (+ _dim-kin 3 3 _num-drive-joint _num-posture-joint))
           ))
    )
   (:robot-env
@@ -819,7 +831,7 @@ return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
            (apply #'concatenate
                   float-vector
                   (mapcar
-                   #'(lambda (trg-coords att-coords sc-mat)
+                   #'(lambda (trg-coords att-coords sc-mat rot-type)
                        (let* ((pos-diff ;; [m]
                                (cond ((equal att-coords :cog)
                                       (v- (scale 1e-3 (send trg-coords :worldpos)) (send self :cog))
@@ -831,6 +843,11 @@ return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
                                (cond ((equal att-coords :cog)
                                       (float-vector 0 0 0)
                                       )
+                                     ((equal rot-type :normal)
+                                      (float-vector
+                                       (acos (v. (send trg-coords :rotate-vector (float-vector 0 0 1))
+                                                 (send att-coords :rotate-vector (float-vector 0 0 1)))))
+                                      )
                                      (t
                                       (matrix-log (m* (send trg-coords :worldrot) (transpose (send att-coords :worldrot))))
                                       )))
@@ -840,6 +857,7 @@ return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
                    _kin-target-coords-list
                    _kin-attention-coords-list
                    _kin-scale-mat-list
+                   _kin-rotation-type
                    ))
            ))
    (send self :get :kinematics-task-value)
@@ -1006,50 +1024,96 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\theta}} \in \mathbb
    (apply
     #'concatenate-matrix-column
     (mapcar
-     #'(lambda (trg-coords att-coords sc-mat)
+     #'(lambda (trg-coords att-coords sc-mat rot-type &aux (rotation-axis (if (equal rot-type :normal) nil t)))
          (let* ((mat
-                 (reduce
-                  #'m+
+                 (apply
+                  #'concatenate-matrix-column
                   (remove
                    nil
                    (list
-                    (if (derivedp trg-coords cascaded-coords)
-                        (send _robot-env :calc-jacobian-from-joint-list
-                              :union-joint-list _variant-joint-list
-                              :move-target (list trg-coords)
-                              :transform-coords (list (make-coords))
-                              :translation-axis (list t)
-                              :rotation-axis (list t)
-                              ))
-                    (scale-matrix
-                     -1
-                     (cond ((equal att-coords :cog)
-                            (concatenate-matrix-column
-                             (send _robot-env :robot-with-root-virtual :calc-cog-jacobian-from-joint-list
-                                   :union-joint-list _variant-joint-list
-                                   :translation-axis t
-                                   )
-                             (make-matrix 3 (length _variant-joint-list))
-                             )
-                            )
-                           (t
-                            (send _robot-env :calc-jacobian-from-joint-list
-                                  :union-joint-list _variant-joint-list
-                                  :move-target (list att-coords)
-                                  :transform-coords (list (make-coords))
-                                  :translation-axis (list t)
-                                  :rotation-axis (list t)
-                                  )
-                            ))
-                     )
-                    )
-                   )))
+                    ;; use axis-angle for rotation
+                    (reduce
+                     #'m+
+                     (remove
+                      nil
+                      (list
+                       (if (derivedp trg-coords cascaded-coords)
+                           (send _robot-env :calc-jacobian-from-joint-list
+                                 :union-joint-list _variant-joint-list
+                                 :move-target (list trg-coords)
+                                 :transform-coords (list (make-coords))
+                                 :translation-axis (list t)
+                                 :rotation-axis (list rotation-axis)
+                                 ))
+                       (scale-matrix
+                        -1
+                        (cond ((equal att-coords :cog)
+                               (concatenate-matrix-column
+                                (send _robot-env :robot-with-root-virtual :calc-cog-jacobian-from-joint-list
+                                      :union-joint-list _variant-joint-list
+                                      :translation-axis t
+                                      )
+                                (make-matrix 3 (length _variant-joint-list))
+                                )
+                               )
+                              (t
+                               (send _robot-env :calc-jacobian-from-joint-list
+                                     :union-joint-list _variant-joint-list
+                                     :move-target (list att-coords)
+                                     :transform-coords (list (make-coords))
+                                     :translation-axis (list t)
+                                     :rotation-axis (list rotation-axis)
+                                     )
+                               ))
+                        )
+                       )))
+                    ;; use normal for rotation
+                    (if (equal rot-type :normal)
+                        (let* ((trg-normal
+                                (send trg-coords :rotate-vector (float-vector 0 0 1)))
+                               (att-normal
+                                (send att-coords :rotate-vector (float-vector 0 0 1)))
+                               (inner-prod
+                                (v. trg-normal att-normal))
+                               (bound-eps 1e-10)
+                               (bounded-inner-prod
+                                (min (max inner-prod (+ -1 bound-eps)) (- 1 bound-eps)))
+                               (acos-derivative
+                                (/ -1 (sqrt (- 1 (* bounded-inner-prod bounded-inner-prod)))))
+                               )
+                          (scale-matrix
+                           acos-derivative
+                           (reduce
+                            #'m+
+                            (remove
+                             nil
+                             (list
+                              (if (derivedp trg-coords cascaded-coords)
+                                  (m*
+                                   (matrix att-normal)
+                                   (send _robot-env :calc-normal-jacobian-from-joint-list
+                                         :union-joint-list _variant-joint-list
+                                         :move-target (list trg-coords)
+                                         :transform-coords (list (make-coords))
+                                         )))
+                              (m*
+                               (matrix trg-normal)
+                               (send _robot-env :calc-normal-jacobian-from-joint-list
+                                     :union-joint-list _variant-joint-list
+                                     :move-target (list att-coords)
+                                     :transform-coords (list (make-coords))
+                                     ))
+                              ))))
+                          ))
+                    )))
+                 )
                 )
            (m* sc-mat mat)
            ))
      _kin-target-coords-list
      _kin-attention-coords-list
      _kin-scale-mat-list
+     _kin-rotation-type
      ))
    )
   (:kinematics-task-jacobian-with-phi
@@ -1069,50 +1133,96 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\phi}} \in \mathbb{R
    (apply
     #'concatenate-matrix-column
     (mapcar
-     #'(lambda (trg-coords att-coords sc-mat)
+     #'(lambda (trg-coords att-coords sc-mat rot-type &aux (rotation-axis (if (equal rot-type :normal) nil t)))
          (let* ((mat
-                 (reduce
-                  #'m+
+                 (apply
+                  #'concatenate-matrix-column
                   (remove
                    nil
                    (list
-                    (if (derivedp trg-coords cascaded-coords)
-                        (send _robot-env :calc-jacobian-from-joint-list
-                              :union-joint-list _invariant-joint-list
-                              :move-target (list trg-coords)
-                              :transform-coords (list (make-coords))
-                              :translation-axis (list t)
-                              :rotation-axis (list t)
-                              ))
-                    (scale-matrix
-                     -1
-                     (cond ((equal att-coords :cog)
-                            (concatenate-matrix-column
-                             (send _robot-env :robot-with-root-virtual :calc-cog-jacobian-from-joint-list
-                                   :union-joint-list _invariant-joint-list
-                                   :translation-axis t
-                                   )
-                             (make-matrix 3 (length _invariant-joint-list))
-                             )
-                            )
-                           (t
-                            (send _robot-env :calc-jacobian-from-joint-list
-                                  :union-joint-list _invariant-joint-list
-                                  :move-target (list att-coords)
-                                  :transform-coords (list (make-coords))
-                                  :translation-axis (list t)
-                                  :rotation-axis (list t)
-                                  )
-                            ))
-                     )
-                    )
-                   )))
+                    ;; use axis-angle for rotation
+                    (reduce
+                     #'m+
+                     (remove
+                      nil
+                      (list
+                       (if (derivedp trg-coords cascaded-coords)
+                           (send _robot-env :calc-jacobian-from-joint-list
+                                 :union-joint-list _invariant-joint-list
+                                 :move-target (list trg-coords)
+                                 :transform-coords (list (make-coords))
+                                 :translation-axis (list t)
+                                 :rotation-axis (list rotation-axis)
+                                 ))
+                       (scale-matrix
+                        -1
+                        (cond ((equal att-coords :cog)
+                               (concatenate-matrix-column
+                                (send _robot-env :robot-with-root-virtual :calc-cog-jacobian-from-joint-list
+                                      :union-joint-list _invariant-joint-list
+                                      :translation-axis t
+                                      )
+                                (make-matrix 3 (length _invariant-joint-list))
+                                )
+                               )
+                              (t
+                               (send _robot-env :calc-jacobian-from-joint-list
+                                     :union-joint-list _invariant-joint-list
+                                     :move-target (list att-coords)
+                                     :transform-coords (list (make-coords))
+                                     :translation-axis (list t)
+                                     :rotation-axis (list rotation-axis)
+                                     )
+                               ))
+                        )
+                       )))
+                    ;; use normal for rotation
+                    (if (equal rot-type :normal)
+                        (let* ((trg-normal
+                                (send trg-coords :rotate-vector (float-vector 0 0 1)))
+                               (att-normal
+                                (send att-coords :rotate-vector (float-vector 0 0 1)))
+                               (inner-prod
+                                (v. trg-normal att-normal))
+                               (bound-eps 1e-10)
+                               (bounded-inner-prod
+                                (min (max inner-prod (+ -1 bound-eps)) (- 1 bound-eps)))
+                               (acos-derivative
+                                (/ -1 (sqrt (- 1 (* bounded-inner-prod bounded-inner-prod)))))
+                               )
+                          (scale-matrix
+                           acos-derivative
+                           (reduce
+                            #'m+
+                            (remove
+                             nil
+                             (list
+                              (if (derivedp trg-coords cascaded-coords)
+                                  (m*
+                                   (matrix att-normal)
+                                   (send _robot-env :calc-normal-jacobian-from-joint-list
+                                         :union-joint-list _invariant-joint-list
+                                         :move-target (list trg-coords)
+                                         :transform-coords (list (make-coords))
+                                         )))
+                              (m*
+                               (matrix trg-normal)
+                               (send _robot-env :calc-normal-jacobian-from-joint-list
+                                     :union-joint-list _invariant-joint-list
+                                     :move-target (list att-coords)
+                                     :transform-coords (list (make-coords))
+                                     ))
+                              ))))
+                          ))
+                    )))
+                 )
                 )
            (m* sc-mat mat)
            ))
      _kin-target-coords-list
      _kin-attention-coords-list
      _kin-scale-mat-list
+     _kin-rotation-type
      ))
    )
   (:eom-trans-task-jacobian-with-wrench
@@ -1468,31 +1578,31 @@ return $\frac{\partial \bm{e}}{\partial \bm{q}_{\mathit{var}}} \in \mathbb{R}^{(
    (unless _only-kinematics?
      (copy-block-matrix _variant-task-jacobi
                         (send self :eom-trans-task-jacobian-with-wrench)
-                        (* 6 _num-kin) _num-variant-joint)
+                        _dim-kin _num-variant-joint)
      (copy-block-matrix _variant-task-jacobi
                         (send self :eom-rot-task-jacobian-with-theta)
-                        (+ (* 6 _num-kin) 3) 0)
+                        (+ _dim-kin 3) 0)
      (copy-block-matrix _variant-task-jacobi
                         (send self :eom-rot-task-jacobian-with-wrench)
-                        (+ (* 6 _num-kin) 3) _num-variant-joint)
+                        (+ _dim-kin 3) _num-variant-joint)
      (when (> _num-drive-joint 0)
        (copy-block-matrix _variant-task-jacobi
                           (send self :torque-task-jacobian-with-theta)
-                          (+ (* 6 _num-kin) 3 3) 0)
+                          (+ _dim-kin 3 3) 0)
        (copy-block-matrix _variant-task-jacobi
                           (send self :torque-task-jacobian-with-wrench)
-                          (+ (* 6 _num-kin) 3 3) _num-variant-joint)
+                          (+ _dim-kin 3 3) _num-variant-joint)
        (copy-block-matrix _variant-task-jacobi
                           (send self :torque-task-jacobian-with-torque)
-                          (+ (* 6 _num-kin) 3 3) (+ _num-variant-joint (* 6 _num-contact)))
+                          (+ _dim-kin 3 3) (+ _num-variant-joint (* 6 _num-contact)))
        )
      )
    (when (> _num-posture-joint 0)
      (copy-block-matrix _variant-task-jacobi
                         (send self :posture-task-jacobian-with-theta)
                         (if _only-kinematics?
-                            (* 6 _num-kin)
-                          (+ (* 6 _num-kin) 3 3 _num-drive-joint))
+                            _dim-kin
+                          (+ _dim-kin 3 3 _num-drive-joint))
                         0)
      )
    _variant-task-jacobi
@@ -1529,11 +1639,11 @@ return $\frac{\partial \bm{e}}{\partial \bm{q}_{\mathit{invar}}} \in \mathbb{R}^
    (unless _only-kinematics?
      (copy-block-matrix _invariant-task-jacobi
                         (send self :eom-rot-task-jacobian-with-phi)
-                        (+ (* 6 _num-kin) 3) 0)
+                        (+ _dim-kin 3) 0)
      (when (> _num-drive-joint 0)
        (copy-block-matrix _invariant-task-jacobi
                           (send self :torque-task-jacobian-with-phi)
-                          (+ (* 6 _num-kin) 3 3) 0)
+                          (+ _dim-kin 3 3) 0)
        )
      )
    _invariant-task-jacobi
