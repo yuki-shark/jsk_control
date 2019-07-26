@@ -8,6 +8,7 @@
 
 (deftest test-sample-arm-ik
   (assert (null-output (sample-arm-reach-ik-raw)))
+  (assert (null-output (sample-arm-reach-ik-raw-normal)))
   (assert (null-output (sample-arm-reach-ik-raw-msc)))
   (assert (null-output (sample-arm-reach-ik-discrete-raw)))
   (assert (null-output (float-vector-p (sample-arm-reach-ik :irteus-ik? nil))))

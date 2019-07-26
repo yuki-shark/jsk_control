@@ -41,6 +41,43 @@
   t)
 (warn "(sample-arm-reach-ik-raw)~%")
 
+(defun sample-arm-reach-ik-raw-normal
+    (&key
+     (pre-process-func)
+     (post-process-func)
+     &allow-other-keys
+     )
+  (setq *robot* (instance sarmclass :init))
+  (setq *robot-env*
+        (instance robot-environment :init :robot *robot* :root-virtual-mode :fix))
+  (setq *arrow* (instance arrow-object :init))
+  (send *arrow* :newcoords
+        (make-coords :pos (float-vector 400 -200 300)))
+  (objects (list *robot* *arrow*))
+
+  (setq *instant-config-task*
+        (instance instant-configuration-task :init
+                  :robot-env *robot-env*
+                  :drive-joint-list nil
+                  :only-kinematics? t
+                  :kin-target-coords-list
+                  (list (send *arrow* :copy-worldcoords))
+                  :kin-attention-coords-list
+                  (list (send *robot-env* :robot :end-coords))
+                  :kin-rotation-type
+                  (list :normal)
+                  ))
+
+  (setq *sqp-opt*
+        (instance sqp-optimization :init
+                  :config-task *instant-config-task*
+                  :pre-process-func pre-process-func
+                  :post-process-func post-process-func
+                  ))
+  (send *sqp-opt* :optimize :loop-num 50)
+  t)
+(warn "(sample-arm-reach-ik-raw-normal)~%")
+
 (defun sample-arm-reach-ik-raw-msc
     (&key
      (pre-process-func)
