@@ -845,8 +845,10 @@ return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
                                       )
                                      ((equal rot-type :normal)
                                       (float-vector
-                                       (acos (v. (send trg-coords :rotate-vector (float-vector 0 0 1))
-                                                 (send att-coords :rotate-vector (float-vector 0 0 1)))))
+                                       (- 1.0
+                                          (v. (send trg-coords :rotate-vector (float-vector 0 0 1))
+                                              (send att-coords :rotate-vector (float-vector 0 0 1)))
+                                          ))
                                       )
                                      (t
                                       (matrix-log (m* (send trg-coords :worldrot) (transpose (send att-coords :worldrot))))
@@ -1073,16 +1075,9 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\theta}} \in \mathbb
                                 (send trg-coords :rotate-vector (float-vector 0 0 1)))
                                (att-normal
                                 (send att-coords :rotate-vector (float-vector 0 0 1)))
-                               (inner-prod
-                                (v. trg-normal att-normal))
-                               (bound-eps 1e-10)
-                               (bounded-inner-prod
-                                (min (max inner-prod (+ -1 bound-eps)) (- 1 bound-eps)))
-                               (acos-derivative
-                                (/ -1 (sqrt (- 1 (* bounded-inner-prod bounded-inner-prod)))))
                                )
                           (scale-matrix
-                           acos-derivative
+                           -1
                            (reduce
                             #'m+
                             (remove
@@ -1182,16 +1177,9 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\phi}} \in \mathbb{R
                                 (send trg-coords :rotate-vector (float-vector 0 0 1)))
                                (att-normal
                                 (send att-coords :rotate-vector (float-vector 0 0 1)))
-                               (inner-prod
-                                (v. trg-normal att-normal))
-                               (bound-eps 1e-10)
-                               (bounded-inner-prod
-                                (min (max inner-prod (+ -1 bound-eps)) (- 1 bound-eps)))
-                               (acos-derivative
-                                (/ -1 (sqrt (- 1 (* bounded-inner-prod bounded-inner-prod)))))
                                )
                           (scale-matrix
-                           acos-derivative
+                           -1
                            (reduce
                             #'m+
                             (remove
