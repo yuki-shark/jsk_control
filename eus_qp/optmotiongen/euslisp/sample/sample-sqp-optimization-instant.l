@@ -83,6 +83,7 @@
      (fix-contact? nil)
      (set-kin-scale? nil)
      (only-kinematics? nil)
+     (rotation-normal? nil)
      (pre-process-func)
      &allow-other-keys
      )
@@ -115,9 +116,9 @@
          )
         (t
          (setq *contact-list*
-               (list (instance 2d-planar-contact :init :name "rleg")
-                     (instance 2d-planar-contact :init :name "lleg")
-                     (instance 2d-planar-contact :init :name "larm")
+               (list (instance 2d-planar-contact :init :name "rleg" :fix-yaw? (if rotation-normal? t))
+                     (instance 2d-planar-contact :init :name "lleg" :fix-yaw? (if rotation-normal? t))
+                     (instance 2d-planar-contact :init :name "larm" :fix-yaw? (if rotation-normal? t))
                      ))
          (setq *robot-env*
                (instance robot-environment :init :robot *robot* :contact-list *contact-list*))
@@ -240,6 +241,9 @@
                                  (send *robot-env* :robot :get :larm_link6-support-polygon)
                                  )
                        ))
+                  :kin-rotation-type
+                  (if rotation-normal?
+                      (list :normal :normal :axis-angle :normal))
                   :kin-scale-list
                   (if set-kin-scale?
                       (list 1.0
@@ -256,6 +260,12 @@
                   :external-coords-list
                   (if (and (not only-kinematics?) apply-external-force?)
                       (list (send *robot-env* :robot :get :rarm-contact-coords)))
+                  :norm-regular-scale-max
+                  (cond (rotation-normal?
+                         (if only-kinematics? 1e-3
+                           (if optimize-torque? 1e-5 1e-3)))
+                        (t
+                         (if only-kinematics? 1e-3 1e-5)))
                   ))
 
   (setq *sqp-opt*
