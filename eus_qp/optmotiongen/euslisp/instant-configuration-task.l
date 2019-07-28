@@ -816,13 +816,30 @@ return $\bm{p}_G(\bm{q})$
     \bm{e}_{1}^{\mathit{kin}}(\bm{\theta}, \bm{\phi}) \\ \bm{e}_{2}^{\mathit{kin}}(\bm{\theta}, \bm{\phi}) \\ \vdots \\ \bm{e}_{N_{\mathit{kin}}}^{\mathit{kin}}(\bm{\theta}, \bm{\phi})
   \end{pmatrix} \\
   \bm{e}_{m}^{\mathit{kin}}(\bm{\theta}, \bm{\phi}) &=&
+  \left\{
+  \begin{array}{lll}
+  K_{\mathit{kin}}
+  \begin{pmatrix}
+    \bm{p}_{m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{p}_{m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \\
+    1 - \bm{\xi}_{m}^{\mathit{kin\mathchar`-trg}, T}(\bm{\theta}, \bm{\phi}) \bm{\xi}_{m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi})
+  \end{pmatrix}
+  & \in \mathbb{R}^4
+  & \rm{if\ kin\mathchar`-rotation\mathchar`-type\ is\ :normal}
+  \\
   K_{\mathit{kin}}
   \begin{pmatrix}
     \bm{p}_{m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{p}_{m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \\
     \bm{a}\left(\bm{R}_{m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) \bm{R}_{m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi})^T\right)
-  \end{pmatrix} \in \mathbb{R}^6 \ \ (m = 1,2,\cdots,N_{\mathit{kin}})
+  \end{pmatrix}
+  & \in \mathbb{R}^6
+  & \rm{otherwise}
+  \end{array}
+  \right.
+  \\
+  && \ \ \ \ (m = 1,2,\cdots,N_{\mathit{kin}}) \nonumber
 \end{eqnarray}
-$\bm{a}(\bm{R})$は姿勢行列$\bm{R}$の等価角軸ベクトルを表す．
+$\bm{a}(\bm{R}) \in \mathbb{R}^3$は姿勢行列$\bm{R}$の等価角軸ベクトルを表す．
+$\bm{\xi} \in \mathbb{R}^3$は法線ベクトル(Z方向の単位ベクトル)を表す．
 
 return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
    "
@@ -1018,8 +1035,28 @@ return $\bm{e}(\bm{q})
     \frac{\partial \bm{e}_1^{\mathit{kin}}}{\partial \bm{\theta}} \\ \frac{\partial \bm{e}_2^{\mathit{kin}}}{\partial \bm{\theta}} \\ \vdots \\ \frac{\partial \bm{e}_{N_{\mathit{kin}}}^{\mathit{kin}}}{\partial \bm{\theta}}
   \end{pmatrix} \\
   \frac{\partial \bm{e}_m^{\mathit{kin}}}{\partial \bm{\theta}}
-  &=& K_{\mathit{kin}} \left\{ \bm{J}_{\theta,m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{J}_{\theta,m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \right\} \ \ (m = 1,2,\cdots,N_{\mathit{kin}})
+  &=&
+  \left\{
+  \begin{array}{l}
+  K_{\mathit{kin}}
+  \begin{pmatrix}
+  \bm{\bar{J}}_{\theta,m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{\bar{J}}_{\theta,m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \\
+  - \bm{\xi}_{m}^{\mathit{kin\mathchar`-trg}, T}(\bm{\theta}, \bm{\phi}) \frac{\partial \bm{\xi}_{m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi})}{\partial \bm{\theta}} - \bm{\xi}_{m}^{\mathit{kin\mathchar`-att}, T}(\bm{\theta}, \bm{\phi}) \frac{\partial \bm{\xi}_{m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi})}{\partial \bm{\theta}}
+  \end{pmatrix}
+  \\
+  \ \ \ \ \ \ \ \ \in \mathbb{R}^{4 \times N_\mathit{var\mathchar`-joint}}
+  \ \ \ \ \rm{if\ kin\mathchar`-rotation\mathchar`-type\ is\ :normal}
+  \\
+  K_{\mathit{kin}} \left\{ \bm{J}_{\theta,m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{J}_{\theta,m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \right\}
+  \\
+  \ \ \ \ \ \ \ \ \in \mathbb{R}^{6 \times N_\mathit{var\mathchar`-joint}}
+  \ \ \ \ \rm{otherwise}
+  \end{array}
+  \right.
+  \\
+  && \ \ \ \ (m = 1,2,\cdots,N_{\mathit{kin}}) \nonumber
 \end{eqnarray}
+$\bm{\bar{J}}$は位置のみ，$\bm{J}$は位置姿勢に関する基礎ヤコビ行列を表す．
 
 return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\theta}} \in \mathbb{R}^{6 N_{\mathit{kin}} \times N_\mathit{var\mathchar`-joint}}$
    "
@@ -1120,8 +1157,28 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\theta}} \in \mathbb
     \frac{\partial \bm{e}_1^{\mathit{kin}}}{\partial \bm{\phi}} \\ \frac{\partial \bm{e}_2^{\mathit{kin}}}{\partial \bm{\phi}} \\ \vdots \\ \frac{\partial \bm{e}_{N_{\mathit{kin}}}^{\mathit{kin}}}{\partial \bm{\phi}}
   \end{pmatrix} \\
   \frac{\partial \bm{e}_m^{\mathit{kin}}}{\partial \bm{\phi}}
-  &=& K_{\mathit{kin}} \left\{ \bm{J}_{\phi,m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{J}_{\phi,m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \right\} \ \ (m = 1,2,\cdots,N_{\mathit{kin}})
+  &=&
+  \left\{
+  \begin{array}{l}
+  K_{\mathit{kin}}
+  \begin{pmatrix}
+  \bm{\bar{J}}_{\phi,m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{\bar{J}}_{\phi,m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \\
+  - \bm{\xi}_{m}^{\mathit{kin\mathchar`-trg}, T}(\bm{\theta}, \bm{\phi}) \frac{\partial \bm{\xi}_{m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi})}{\partial \bm{\phi}} - \bm{\xi}_{m}^{\mathit{kin\mathchar`-att}, T}(\bm{\theta}, \bm{\phi}) \frac{\partial \bm{\xi}_{m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi})}{\partial \bm{\phi}}
+  \end{pmatrix}
+  \\
+  \ \ \ \ \ \ \ \ \in \mathbb{R}^{4 \times N_\mathit{invar\mathchar`-joint}}
+  \ \ \ \ \rm{if\ kin\mathchar`-rotation\mathchar`-type\ is\ :normal}
+  \\
+  K_{\mathit{kin}} \left\{ \bm{J}_{\phi,m}^{\mathit{kin\mathchar`-trg}}(\bm{\theta}, \bm{\phi}) - \bm{J}_{\phi,m}^{\mathit{kin\mathchar`-att}}(\bm{\theta}, \bm{\phi}) \right\}
+  \\
+  \ \ \ \ \ \ \ \ \in \mathbb{R}^{6 \times N_\mathit{invar\mathchar`-joint}}
+  \ \ \ \ \rm{otherwise}
+  \end{array}
+  \right.
+  \\
+  && \ \ \ \ (m = 1,2,\cdots,N_{\mathit{kin}}) \nonumber
 \end{eqnarray}
+$\bm{\bar{J}}$は位置のみ，$\bm{J}$は位置姿勢に関する基礎ヤコビ行列を表す．
 
 return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\phi}} \in \mathbb{R}^{6 N_{\mathit{kin}} \times N_\mathit{invar\mathchar`-joint}}$
    "
