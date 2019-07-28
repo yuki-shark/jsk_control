@@ -41,6 +41,9 @@ return $\bm{p}_i \in \mathbb{R}^3$
   "
    (send child-link :worldpos)
    )
+  )
+
+(defmethod rotational-joint
   (:calc-normal-jacobian
    (jacobi row-idx col-idx paxis world-default-coords mtn tc &aux cross-prod)
    "
@@ -54,6 +57,18 @@ The block matrix is $\bm{a} \times \bm{n}$, where $\bm{a}$ is joint axis and $\b
      (setf (aref jacobi (+ row-idx i) col-idx)
            (aref cross-prod i))
      )
+   )
+  )
+
+(defmethod linear-joint
+  (:calc-normal-jacobian
+   (jacobi row-idx col-idx paxis world-default-coords mtn tc &aux cross-prod)
+   "
+Calculate the block matrix of the jacobian of normal direction.
+The block matrix is $\bm{0}$.
+   "
+   (dotimes (i 3)
+     (setf (aref jacobi (+ row-idx i) col-idx) 0))
    )
   )
 
