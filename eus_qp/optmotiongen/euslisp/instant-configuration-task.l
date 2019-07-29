@@ -657,6 +657,24 @@ return $\mathcal{T}^{\mathit{kin\mathchar`-trg}} := \{T_1^{\mathit{kin\mathchar`
    "
    _kin-target-coords-list
    )
+  (:kin-target-coords
+   (&key
+    (name)
+    (coords)
+    )
+   "
+set / get $T_i^{\mathit{kin\mathchar`-trg}}$
+   "
+   (let* ((idx
+           (position-if #'(lambda (c) (equal (send c :name) name)) _kin-target-coords-list))
+          )
+     (cond (coords
+            (setf (elt _kin-target-coords-list idx) coords)
+            )
+           (t
+            (elt _kin-target-coords-list idx)
+            ))
+     ))
   (:kin-attention-coords-list
    ()
    "
@@ -697,6 +715,24 @@ return $\mathcal{T}^{\mathit{cnt\mathchar`-trg}} := \{T_1^{\mathit{cnt\mathchar`
    "
    _contact-target-coords-list
    )
+  (:contact-target-coords
+   (&key
+    (name)
+    (coords)
+    )
+   "
+set / get $T_i^{\mathit{cnt\mathchar`-trg}}$
+   "
+   (let* ((idx
+           (position-if #'(lambda (c) (equal (send c :name) name)) _contact-target-coords-list))
+          )
+     (cond (coords
+            (setf (elt _contact-target-coords-list idx) coords)
+            )
+           (t
+            (elt _contact-target-coords-list idx)
+            ))
+     ))
   (:contact-attention-coords-list
    ()
    "
