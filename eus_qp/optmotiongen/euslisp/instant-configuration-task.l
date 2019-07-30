@@ -37,7 +37,7 @@
           (_dim-kin "$\mathit{dim}(\bm{e}^{\mathit{kin}})$")
           (_dim-task "$\mathit{dim}(\bm{e})$")
           ;; scale
-          (_kin-rotation-type "rotation type of kinematics task (:axis-angle or :normal)")
+          (_kin-rotation-type-list "rotation type of kinematics task (:axis-angle or :normal)")
           (_kin-scale-mat-list "$K_{\mathit{kin}}$")
           (_target-posture-scale-list "$k_{\mathit{posture}}$")
           (_norm-regular-scale-max "$k_{\mathit{max}}$")
@@ -196,7 +196,8 @@ $\bm{\hat{w}}$は次式のように，全接触部位でのワールド座標系
     (collision-pair-list)
     (collision-distance-margin 0.01) ;; [m]
     (collision-distance-margin-list) ;; [m]
-    (kin-rotation-type)
+    (kin-rotation-type :axis-angle) ;; :axis-angle or :normal
+    (kin-rotation-type-list)
     (kin-scale 1.0)
     (kin-scale-list)
     (kin-scale-mat-list)
@@ -236,9 +237,13 @@ Initialize instance
    (setq _collision-distance-margin-list
          (or collision-distance-margin-list
              (make-list (length _collision-pair-list) :initial-element collision-distance-margin)))
-   (setq _kin-rotation-type
-         (or kin-rotation-type
-             (make-list (length kin-target-coords-list) :initial-element :axis-angle)))
+   (cond (kin-rotation-type-list
+          (setq _kin-rotation-type-list kin-rotation-type-list)
+          )
+         (t
+          (setq _kin-rotation-type-list
+                (make-list (length kin-target-coords-list) :initial-element kin-rotation-type))
+          ))
    (cond (kin-scale-mat-list
           (setq _kin-scale-mat-list kin-scale-mat-list)
           )
@@ -253,7 +258,7 @@ Initialize instance
                             (diagonal sc)
                             )))
                  kin-scale-list
-                 _kin-rotation-type
+                 _kin-rotation-type-list
                  ))
           )
          (kin-scale
@@ -261,7 +266,7 @@ Initialize instance
                 (mapcar
                  #'(lambda (rot-type)
                      (scale-matrix kin-scale (unit-matrix (if (equal rot-type :normal) 4 6))))
-                 _kin-rotation-type))
+                 _kin-rotation-type-list))
           ))
    (cond (target-posture-scale-list
           (setq _target-posture-scale-list target-posture-scale-list)
@@ -308,7 +313,7 @@ Initialize instance
    (setq _dim-variant-config (+ _dim-theta _dim-wrench _dim-torque))
    (setq _dim-invariant-config _dim-phi)
    (setq _dim-config (+ _dim-variant-config _dim-invariant-config))
-   (setq _dim-kin (apply #'+ (mapcar #'(lambda (rot-type) (if (equal rot-type :normal) 4 6)) _kin-rotation-type)))
+   (setq _dim-kin (apply #'+ (mapcar #'(lambda (rot-type) (if (equal rot-type :normal) 4 6)) _kin-rotation-type-list)))
    (cond (_only-kinematics?
           (setq _dim-task (+ _dim-kin _num-posture-joint))
           )
@@ -912,7 +917,7 @@ return $\bm{e}^{\mathit{kin}}(\bm{q}) \in \mathbb{R}^{6 N_{\mathit{kin}}}$
                    _kin-target-coords-list
                    _kin-attention-coords-list
                    _kin-scale-mat-list
-                   _kin-rotation-type
+                   _kin-rotation-type-list
                    ))
            ))
    (send self :get :kinematics-task-value)
@@ -1181,7 +1186,7 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\theta}} \in \mathbb
      _kin-target-coords-list
      _kin-attention-coords-list
      _kin-scale-mat-list
-     _kin-rotation-type
+     _kin-rotation-type-list
      ))
    )
   (:kinematics-task-jacobian-with-phi
@@ -1303,7 +1308,7 @@ return $\dfrac{\partial \bm{e}^{\mathit{kin}}}{\partial \bm{\phi}} \in \mathbb{R
      _kin-target-coords-list
      _kin-attention-coords-list
      _kin-scale-mat-list
-     _kin-rotation-type
+     _kin-rotation-type-list
      ))
    )
   (:eom-trans-task-jacobian-with-wrench

@@ -241,7 +241,7 @@
                                  (send *robot-env* :robot :get :larm_link6-support-polygon)
                                  )
                        ))
-                  :kin-rotation-type
+                  :kin-rotation-type-list
                   (if rotation-normal?
                       (list :normal :normal :axis-angle :normal))
                   :kin-scale-list

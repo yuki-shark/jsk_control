@@ -64,8 +64,7 @@
                   (list (send *arrow* :copy-worldcoords))
                   :kin-attention-coords-list
                   (list (send *robot-env* :robot :end-coords))
-                  :kin-rotation-type
-                  (list :normal)
+                  :kin-rotation-type :normal
                   ))
 
   (setq *sqp-opt*
