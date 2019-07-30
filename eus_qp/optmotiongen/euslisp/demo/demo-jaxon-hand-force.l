@@ -19,7 +19,8 @@
   (send *robot* :put :lleg-foot-contact-constraint
         (instance default-contact-constraint
                   :init-from-support-polygon
-                  :mu-trans 0.2
+                  :mu-trans 1.0
+                  :mu-rot 10.0
                   :support-polygon (send (send (send *robot* :lleg-end-coords) :parent) :get :support-polygon)
                   :support-polygon-coords (send (send *robot* :lleg-end-coords) :worldcoords)
                   :support-polygon-margin 10
@@ -27,7 +28,8 @@
   (send *robot* :put :rleg-foot-contact-constraint
         (instance default-contact-constraint
                   :init-from-support-polygon
-                  :mu-trans 0.2
+                  :mu-trans 1.0
+                  :mu-rot 10.0
                   :support-polygon (send (send (send *robot* :rleg-end-coords) :parent) :get :support-polygon)
                   :support-polygon-coords (send (send *robot* :rleg-end-coords) :worldcoords)
                   :support-polygon-margin 10
