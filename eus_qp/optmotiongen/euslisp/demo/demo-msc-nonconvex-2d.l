@@ -1,4 +1,5 @@
 (load "package://eus_qp/optmotiongen/euslisp/sqp-msc-optimization.l")
+(load "package://eus_qp/optmotiongen/euslisp/validate-jacobian.l")
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -20,12 +21,14 @@
 (defmethod simple-2d-config-task
   (:init
    (&key
-    (initial-config (float-vector 5.0 5.0))
+    (initial-config (float-vector 2.0 2.5))
     (norm-regular-scale-coeff 1.0)
-    (norm-regular-scale-max 1e0)
+    (norm-regular-scale-max 1e10)
     (norm-regular-scale-offset 1e-10)
     (config-min (float-vector 0 0))
     (config-max (float-vector 10 10))
+    (delta-config (float-vector 5.0 5.0))
+    ;; (delta-config (float-vector 0.5 0.5))
     )
    (setq _config initial-config)
    (setq _dim-config 2)
@@ -34,6 +37,7 @@
    (setq _norm-regular-scale-offset norm-regular-scale-offset)
    (setq _config-min config-min)
    (setq _config-max config-max)
+   (setq _delta-config delta-config)
    )
   (:dim-config
    ()
@@ -80,6 +84,8 @@
            (concatenate-matrix-column
             (unit-matrix _dim-config)
             (scale-matrix -1 (unit-matrix _dim-config))
+            (unit-matrix _dim-config)
+            (scale-matrix -1 (unit-matrix _dim-config))
             )))
    (send self :get :config-inequality-constraint-matrix)
    )
@@ -93,6 +99,8 @@
             float-vector
             (v- _config-min _config)
             (v- _config _config-max)
+            (scale -1 _delta-config)
+            (scale -1 _delta-config)
             )))
    (send self :get :config-inequality-constraint-vector)
    )
@@ -167,15 +175,17 @@
     (update?)
     )
    (float-vector
-    (- 8.0 (alpine2 (elt _config 0) (elt _config 1))))
+    (* 100 (- 8.0 (alpine2 (elt _config 0) (elt _config 1)))))
    )
   (:task-jacobian
    ()
    (matrix
     (scale
-     -1
-     (alpine2-jacobi (elt _config 0) (elt _config 1))
-     ))
+     100
+     (scale
+      -1
+      (alpine2-jacobi (elt _config 0) (elt _config 1))
+      )))
    )
   )
 
@@ -196,8 +206,10 @@
   (with-open-file
    (f (send sqp :get :filename)
       :direction :output :if-exists (if initialize? :new-version :append) :if-does-not-exist :create)
-   (dolist (v config-list)
-     (format f "~a, " v)
+   (dotimes (i (length config-list))
+     (format f "~10,5f" (elt config-list i))
+     (unless (= i (1- (length config-list)))
+       (format f ", "))
      )
    (format f "~%")
    )
@@ -211,9 +223,9 @@
   (cond (use-msc?
          (setq *sqp-opt*
                (instance sqp-msc-optimization :init
-                         :num-msc 16
-                         :dispersion-scale 1e-1
-                         :dispersion-scale-decrease-ratio 0.8
+                         :num-msc 8
+                         :dispersion-scale 1e3
+                         :dispersion-scale-decrease-ratio 0.9
                          :config-task *config-task*
                          :post-process-func
                          #'(lambda (sqp)
@@ -227,7 +239,7 @@
          (dolist (config-task (send *sqp-opt* :config-task-list))
            (send config-task :set-config
                  (v+ (send config-task :config-vector)
-                     (gaussian-random 2)
+                     (scale 1e-2 (gaussian-random 2))
                      ))
            )
          )
@@ -237,6 +249,7 @@
                          :config-task *config-task*
                          :post-process-func
                          #'(lambda (sqp)
+                             ;; (validate-jacobian :config-task (send sqp :config-task))
                              (write-configuration :sqp sqp)
                              )
                          ))
