@@ -179,6 +179,29 @@
    )
   )
 
+(defun write-configuration
+    (&key
+     (sqp *sqp-opt*)
+     (initialize? nil)
+     &aux
+     (config-list
+      (cond ((derivedp sqp sqp-msc-optimization)
+             (apply #'concatenate cons (send-all (send sqp :config-task-list) :config-vector))
+             )
+            ((derivedp sqp sqp-optimization)
+             (concatenate cons (send (send sqp :config-task) :config-vector))
+             ))
+      )
+     )
+  (with-open-file
+   (f (send sqp :get :filename)
+      :direction :output :if-exists (if initialize? :new-version :append) :if-does-not-exist :create)
+   (dolist (v config-list)
+     (format f "~a, " v)
+     )
+   (format f "~%")
+   )
+  )
 
 (defun demo-msc-nonconvex-2d
     (&key
@@ -196,8 +219,11 @@
                          #'(lambda (sqp)
                              (warning-message 3 "dispersion-scale: ~a~%"
                                               (send sqp :get-val '_dispersion-scale))
+                             (write-configuration :sqp sqp)
                              )
                          ))
+         (send *sqp-opt* :put :filename
+               (ros::resolve-ros-path "package://eus_qp/optmotiongen/logs/demo-msc-nonconvex-2d/config-msc.csv"))
          (dolist (config-task (send *sqp-opt* :config-task-list))
            (send config-task :set-config
                  (v+ (send config-task :config-vector)
@@ -209,8 +235,17 @@
          (setq *sqp-opt*
                (instance sqp-optimization :init
                          :config-task *config-task*
+                         :post-process-func
+                         #'(lambda (sqp)
+                             (write-configuration :sqp sqp)
+                             )
                          ))
+         (send *sqp-opt* :put :filename
+               (ros::resolve-ros-path "package://eus_qp/optmotiongen/logs/demo-msc-nonconvex-2d/config.csv"))
          ))
+  (unix:system
+   (format nil "DIRNAME=`dirname ~a`; if [ ! -d $DIRNAME ]; then mkdir -p $DIRNAME; fi" (send *sqp-opt* :get :filename)))
+  (write-configuration :sqp *sqp-opt* :initialize? t)
   (send *sqp-opt* :optimize
         :loop-num 100
         :print-status-interval 10
