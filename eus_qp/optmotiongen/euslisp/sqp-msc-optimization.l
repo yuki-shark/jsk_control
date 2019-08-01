@@ -240,9 +240,11 @@ return $\bm{v}_{\mathit{msc}} \in \mathbb{R}^{N_{\mathit{msc}} \mathit{dim}(\bm{
    ()
    (when _no-visualize?
      (return-from :_update-viewer-once nil))
-   (send *irtviewer* :draw-objects :flush nil)
+   (when (boundp '*irtviewer*)
+     (send *irtviewer* :draw-objects :flush nil))
    (send-all _config-task-list :update-viewer)
-   (send *irtviewer* :viewer :flush)
+   (when (boundp '*irtviewer*)
+     (send *irtviewer* :viewer :flush))
    (x::window-main-one)
    )
   (:_print-status-once

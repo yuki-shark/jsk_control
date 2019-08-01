@@ -220,9 +220,11 @@ Return status of sqp optimization.
    ()
    (when _no-visualize?
      (return-from :_update-viewer-once nil))
-   (send *irtviewer* :draw-objects :flush nil)
+   (when (boundp '*irtviewer*)
+     (send *irtviewer* :draw-objects :flush nil))
    (send _config-task :update-viewer)
-   (send *irtviewer* :viewer :flush)
+   (when (boundp '*irtviewer*)
+     (send *irtviewer* :viewer :flush))
    (x::window-main-one)
    )
   (:_print-status-once
