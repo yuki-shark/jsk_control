@@ -1,81 +1,41 @@
 (load "package://eus_qp/optmotiongen/euslisp/trajectory-configuration-task.l")
 (load "package://eus_qp/optmotiongen/euslisp/sqp-msc-optimization.l")
 (load "package://eus_qp/optmotiongen/euslisp/validate-jacobian.l")
+(load "./util.l")
+(load "./two-dof-manipulator.l")
 
 
-(defun write-configuration
+(defun demo-msc-2dof-arm
     (&key
-     (sqp)
-     (initialize? nil)
-     &aux
-     (config-list
-      (cond ((derivedp sqp sqp-msc-optimization)
-             (apply #'concatenate cons (send-all (send sqp :config-task-list) :config-vector))
-             )
-            ((derivedp sqp sqp-optimization)
-             (concatenate cons (send (send sqp :config-task) :config-vector))
-             ))
-      )
-     )
-  (with-open-file
-   (f (send sqp :get :filename)
-      :direction :output :if-exists (if initialize? :new-version :append) :if-does-not-exist :create)
-   (dotimes (i (length config-list))
-     (format f "~10,5f" (elt config-list i))
-     (unless (= i (1- (length config-list)))
-       (format f ", "))
-     )
-   (format f "~%")
-   )
-  )
-
-(defun demo-msc-obstacle-2d
-    (&key
-     (use-msc? nil)
-     (loop-num 10)
-     (L-shape-obst? t)
-     (pos-max 5e3)
+     (use-msc? t)
+     (loop-num 30)
+     (with-obstacle? t)
      (num-msc 4)
-     (dispersion-scale 1e-1)
-     (dispersion-scale-decrease-ratio 0.5)
+     (dispersion-scale 1e0)
+     (dispersion-scale-decrease-ratio 0.8)
      (initial-noise-variance 1e-6)
      (log-name (if use-msc? "config-msc.csv" "config.csv"))
-     (log-dir (ros::resolve-ros-path "package://eus_qp/optmotiongen/logs/demo-msc-obstacle-2d/"))
+     (log-dir (ros::resolve-ros-path "package://eus_qp/optmotiongen/logs/demo-msc-2dof-arm/"))
      )
   ;; setup robot
-  (let* ((body1 (make-cylinder 30 50))
-         (clink (instance cascaded-link :init))
-         )
-    (send body1 :set-color (float-vector 1 0 1))
-    (setq link1 (instance bodyset-link :init (make-cascoords) :bodies (list body1) :name :suitcase-link))
-    (send clink :assoc link1)
-    (setf (slot clink cascaded-link 'links) (list link1))
-    (setf (slot clink cascaded-link 'joint-list) nil)
-    (send clink :init-ending)
-    (setq *robot* clink)
-    (send *robot* :put :robot-coords
-          (make-cascoords :parent (car (send *robot* :links))))
+  (setq *robot* (instance two-dof-manipulator :init))
+  (send-all (send *robot* :joint-list) :max-angle 360)
+  (send-all (send *robot* :joint-list) :min-angle -360)
+  (unless with-obstacle?
+    (send (elt (send *robot* :joint-list) 0) :max-angle 20)
+    (send (elt (send *robot* :joint-list) 0) :min-angle -270)
     )
   (setq *robot-env*
-        (instance robot-environment :init :robot *robot*
-                  :root-virtual-mode nil
-                  :root-virtual-joint-class-list (list linear-joint linear-joint)
-                  :root-virtual-joint-axis-list (list :x :y)
-                  :root-virtual-joint-min-angle-list (list (- pos-max) (- pos-max))
-                  :root-virtual-joint-max-angle-list (list pos-max pos-max)
-                  ))
-  (send *robot-env* :angle-vector (float-vector 2000 0))
+        (instance robot-environment :init :robot *robot* :root-virtual-mode :fix))
   ;; setup environment
-  (setq *obst1* (make-cube 200 2200 500))
-  (send *obst1* :newcoords (make-coords :pos (float-vector 1000 0 0)))
-  (cond (L-shape-obst?
-         (setq *obst2* (make-cube 200 2200 500))
-         (send *obst2* :newcoords (make-coords :pos (float-vector 0 1000 0) :rpy (list pi/2 0 0)))
+  (setq *obst1* (make-cube 500 500 500))
+  (send *obst1* :newcoords (make-coords :pos (float-vector 500 500 0)))
+  (cond (with-obstacle?
+         (setq *obst-list* (list *obst1*))
          )
         (t
-         (setq *obst2* nil)
+         (setq *obst-list* nil)
          ))
-  (setq *obst-list* (remove nil (list *obst1* *obst2*)))
   (send-all *obst-list* :set-color (float-vector 0 1 1))
   ;; draw
   (unless (boundp '*irtviewer*)
@@ -83,24 +43,33 @@
     (send *irtviewer* :change-background (float-vector 1 1 1))
     (send *irtviewer* :draw-floor 500)
     (send *irtviewer* :floor-color (float-vector 0 0 0))
+    (send *irtviewer* :draw-origin nil)
     )
   (objects (append (list *robot*) *obst-list*))
+  (send *irtviewer* :viewer :viewing :look #f(0 0 12000) #f(0 0 0) #f(1 0 0))
+  (send *irtviewer* :draw-objects)
 
   (setq *instant-config-task*
         (instance instant-configuration-task :init
-                  :name :start
                   :robot-env *robot-env*
                   :only-kinematics? t
+                  :drive-joint-list nil
                   :kin-target-coords-list
-                  (list (make-coords))
+                  (list (make-coords :pos (float-vector 0 1000 0)))
                   :kin-attention-coords-list
-                  (list (send *robot* :get :robot-coords))
+                  (list (send *robot* :end-coords))
                   :kin-scale-list
                   (list (float-vector 1 1 0 0 0 0)) ;; only x and y
                   :collision-pair-list
-                  (mapcar #'(lambda (obst) (list (car (send *robot* :links)) obst)) *obst-list*)
-                  :collision-distance-margin
-                  (- (* 1e-3 (radius-of-cylinder (car (send *robot* :bodies)))))
+                  (apply
+                   #'append
+                   (mapcar #'(lambda (l)
+                               (mapcar #'(lambda (obst) (list l obst))
+                                       *obst-list*))
+                           (send *robot* :links))
+                   )
+                  :collision-distance-margin 0.01
+                  :norm-regular-scale-max 1e10
                   ))
 
   (cond (use-msc?
@@ -110,9 +79,12 @@
                          :dispersion-scale dispersion-scale
                          :dispersion-scale-decrease-ratio dispersion-scale-decrease-ratio
                          :config-task *instant-config-task*
+                         :pre-process-func
+                         #'(lambda (sqp)
+                             (send *irtviewer* :viewer :viewing :look #f(0 0 12000) #f(0 0 0) #f(1 0 0))
+                             )
                          :post-process-func
                          #'(lambda (sqp)
-                             (send *irtviewer* :viewer :viewing :look #f(500 0 10000) #f(500 0 0) #f(1 0 0))
                              (warning-message 3 "dispersion-scale: ~a~%"
                                               (send sqp :get-val '_dispersion-scale))
                              (write-configuration :sqp sqp)
@@ -125,14 +97,19 @@
                      ))
            )
          (objects (append (send-all (send *sqp-opt* :config-task-list) :robot-env) *obst-list*))
+         (send *irtviewer* :viewer :viewing :look #f(0 0 12000) #f(0 0 0) #f(1 0 0))
+         (send *irtviewer* :draw-objects)
          )
         (t
          (setq *sqp-opt*
                (instance sqp-optimization :init
                          :config-task *instant-config-task*
+                         :pre-process-func
+                         #'(lambda (sqp)
+                             (send *irtviewer* :viewer :viewing :look #f(0 0 12000) #f(0 0 0) #f(1 0 0))
+                             )
                          :post-process-func
                          #'(lambda (sqp)
-                             (send *irtviewer* :viewer :viewing :look #f(500 0 10000) #f(500 0 0) #f(1 0 0))
                              ;; (validate-jacobian :config-task (send sqp :config-task))
                              (write-configuration :sqp sqp)
                              )
@@ -147,4 +124,12 @@
         :print-status-interval 1
         )
   )
-(warn "(demo-msc-obstacle-2d)~%")
+(warn "(demo-msc-2dof-arm)~%")
+
+#|
+;; joint range
+(demo-msc-2dof-arm :use-msc? nil :with-obstacle? nil)
+(demo-msc-2dof-arm :use-msc? t :with-obstacle? nil)
+;; obstacle
+(demo-msc-2dof-arm :use-msc? nil :with-obstacle? t)
+(demo-msc-2dof-arm :use-msc? t :with-obstacle? t)
