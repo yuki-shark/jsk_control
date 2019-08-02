@@ -2592,7 +2592,7 @@ update inequality matrix $\bm{C}_{\mathit{col},\theta}, \bm{C}_{\mathit{col,\phi
               (dist (- (* 1e-3 (elt col-ret 0)) dist-margin)) ;; [m]
               (dir
                (cond ((functionp 'bt-collision-distance)
-                      (scale (if (> dist 0) 1 -1) (normalize-vector (v- p1 p2)))
+                      (scale (if (> (elt col-ret 0) 0) 1 -1) (normalize-vector (v- p1 p2)))
                       )
                      (t
                       (normalize-vector (v- p1 p2))
