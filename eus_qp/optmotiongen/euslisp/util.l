@@ -1,5 +1,5 @@
 (load "package://eus_qpoases/euslisp/eus-qpoases.l")
-(load "package://eus_osqp/euslisp/eus-osqp.l")
+;; (load "package://eus_osqp/euslisp/eus-osqp.l")
 (load "package://eus_qp/euslisp/contact-optimization.l")
 
 
