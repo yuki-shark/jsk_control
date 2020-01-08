@@ -27,9 +27,11 @@
 
     <!-- global costmap with pointcloud, for odom_navigation_demo -->
     <rosparam file="$(find jsk_footstep_planner)/config/costmap_global_pointcloud.yaml" command="load" ns="global_costmap" if="$(arg no_static_map)"/>
-    <param name="global_costmap/width" value="10.0" if="$(arg no_static_map)"/>
-    <param name="global_costmap/height" value="10.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/width" value="20.0" if="$(arg no_static_map)"/>
+    <param name="global_costmap/height" value="20.0" if="$(arg no_static_map)"/>
   </node>
+
+  <node pkg="jsk_footstep_planner" type="pub-go-velocity.l" name="pub_go_velocity" output="screen" />
 
   <node name="rviz" pkg="rviz" type="rviz" args="-d $(find jsk_footstep_planner)/config/jaxon_move_base.rviz" output="screen"/>
 
