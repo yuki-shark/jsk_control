@@ -5,6 +5,7 @@
   (setq *robot* *jaxon_red*)
   )
 (ros::roseus-add-msgs "geometry_msgs")
+(ros::roseus-add-msgs "move_base_msgs")
 
 (defun start-footguided-modification
     ()
@@ -79,13 +80,15 @@
   ;; update command
   (send *ri* :go-velocity x y yaw)
   (format t "update command~%")
+  ) ;; callback
 
+(defun result-callback(msg)
   ;; stop command
-  (when (and (eq x 0.0) (eq y 0.0) (eq yaw 0.0))
+  (when (eq (send (send msg :status) :status) 3)
     (send *ri* :go-stop)
     (format t "stop command~%")
     )
-  ) ;; defun
+  ) ;; result-callback
 
 ;; footguided modification
 (format t "start footguided modification~%")
@@ -100,6 +103,7 @@
 (ros::roseus "pub_go_velocity")
 (format t "pub_go_velocity node init~%")
 (ros::subscribe "cmd_vel" geometry_msgs::Twist #'callback 1)
+(ros::subscribe "move_base/result" move_base_msgs::MoveBaseActionResult #'result-callback 1)
 (do-until-key
  (ros::spin-once))
 (format t "Shutdown go-velocity Publisher~%")
