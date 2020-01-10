@@ -7,32 +7,79 @@
 (ros::roseus-add-msgs "geometry_msgs")
 (ros::roseus-add-msgs "move_base_msgs")
 
+;; (defun start-footguided-modification
+;;     ()
+;;   (let* ((step-time 0.7)
+;;          (double-ratio 0.1))
+;;   ;; (let* ((step-time 1.0)
+;;   ;;        (double-ratio 0.1))
+;;     (send *ri* :set-gait-generator-param
+;;           :leg-margin #f(0.12 0.09 0.05 0.05)
+;;           :safe-leg-margin #f(0.07 0.055 0.05 0.05)
+;;           :dcm-offset 0.02
+;;           )
+;;     (send *ri* :set-gait-generator-param
+;;           :stride-limitation-type 1
+;;           :stride-limitation-for-circle-type #f(0.15 0.3 15 0.1 0.14)
+;;           :default-orbit-type :rectangle
+;;           ;; :default-step-height 0.05
+;;           :default-step-height 0.07
+;;           :default-step-time step-time
+;;           :default-double-support-ratio double-ratio
+;;           :swing-trajectory-delay-time-offset (* step-time (- 1.0 double-ratio) 0.25)
+;;           ;; :overwritable-stride-limitation #f(0.35 0.5 0 0.3 0.14)
+;;           :overwritable-stride-limitation #f(0.35 0.5 0 0.4 0.14)
+;;           :margin-time-ratio 0.2
+;;           :min-time-mgn 0.3
+;;           :min-time 0.6
+;;           ;; :min-time 0.8
+;;           :use-disturbance-compensation t
+;;           :zmp-delay-time-const 0.05
+;;           :dc-gain 1e-4
+;;           :emergency-step-time #f(0.08 0.6 0.7)
+;;           )
+;;     (send *ri* :set-auto-balancer-param
+;;           :is-emergency-step-mode t
+;;           :is-emergency-touch-wall-mode nil
+;;           :touch-wall-retrieve-time 0.4
+;;           )
+;;     ))
+
+;; choreonoid terrain env param
 (defun start-footguided-modification
     ()
   (let* ((step-time 0.7)
-         (double-ratio 0.1))
-  ;; (let* ((step-time 1.0)
-  ;;        (double-ratio 0.1))
-    (send *ri* :set-gait-generator-param
-          :leg-margin #f(0.12 0.09 0.05 0.05)
-          :safe-leg-margin #f(0.07 0.055 0.05 0.05)
-          :dcm-offset 0.02
+         (double-ratio 0.05))
+    (cond ((boundp '*chidori*)
+           (send *ri* :set-gait-generator-param
+                 :leg-margin #f(0.15 0.09 0.065 0.065)
+                 :safe-leg-margin #f(0.13 0.07 0.05 0.05)
+                 ))
+          ((boundp '*jaxon_red*)
+           (send *ri* :set-gait-generator-param
+                 :leg-margin #f(0.12 0.09 0.05 0.05)
+                 :safe-leg-margin #f(0.07 0.055 0.05 0.05)
+                 :dcm-offset 0.03
+                 ))
+          ((boundp '*rhp4b*)
+           (send *ri* :set-gait-generator-param
+                 :leg-margin #f(0.12 0.09 0.07 0.06)
+                 :safe-leg-margin #f(0.07 0.055 0.07 0.06)
+                 :dcm-offset 0.02
+                 ))
           )
     (send *ri* :set-gait-generator-param
           :stride-limitation-type 1
           :stride-limitation-for-circle-type #f(0.15 0.3 15 0.1 0.14)
           :default-orbit-type :rectangle
-          ;; :default-step-height 0.05
-          :default-step-height 0.07
+          :default-step-height 0.08
           :default-step-time step-time
           :default-double-support-ratio double-ratio
           :swing-trajectory-delay-time-offset (* step-time (- 1.0 double-ratio) 0.25)
-          ;; :overwritable-stride-limitation #f(0.35 0.5 0 0.3 0.14)
-          :overwritable-stride-limitation #f(0.35 0.5 0 0.4 0.14)
+          :overwritable-stride-limitation #f(0.35 0.5 0 0.35 0.14)
           :margin-time-ratio 0.2
           :min-time-mgn 0.3
-          :min-time 0.6
-          ;; :min-time 0.8
+          :min-time 0.5
           :use-disturbance-compensation t
           :zmp-delay-time-const 0.05
           :dc-gain 1e-4
