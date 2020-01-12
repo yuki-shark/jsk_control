@@ -1,0 +1,22 @@
+<launch>
+  <arg name="rviz" default="true" />
+
+  <!-- move base -->
+  <include file="$(find jsk_footstep_planner)/launch/example_move_base.launch" >
+    <arg name="no_static_map"       value="true"/>
+    <arg name="base_global_planner" value="navfn/NavfnROS"/>
+    <arg name="base_local_planner"  value="dwa_local_planner/DWAPlannerROS"/>
+    <arg name="rviz"                value="false" />
+  </include>
+
+  <!-- color object recognition -->
+  <include file="$(find jsk_footstep_planner)/launch/color_object_recognition.launch" >
+    <arg name="rviz" value="false" />
+  </include>
+
+  <!-- visualize -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find jsk_footstep_planner)/config/jaxon_path_planner.rviz"
+        output="screen"/>
+
+</launch>
