@@ -1,0 +1,53 @@
+<launch>
+  <arg name="MANAGER"           default="nodelet_manager" />
+  <arg name="INPUT_CLOUD"       default="/multisense_local/image_points2_color" />
+  <arg name="INPUT_IMAGE"       default="/multisense_local/left/image_rect_color" />
+  <arg name="INPUT_CAMERA_INFO" default="/multisense_local/left/camera_info" />
+  <arg name="rviz"              default="true" />
+
+  <!-- nodelet manager -->
+  <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager" />
+
+  <!-- extract red boxes -->
+  <include file="$(find opencv_apps)/launch/hsv_color_filter.launch" >
+    <arg name="node_name" value="red_hsv_color_filter" />
+    <arg name="image" value="$(arg INPUT_IMAGE)" />
+    <!-- choreonoid -->
+    <arg name="h_limit_max" value="10"  doc="The maximum allowed field value Hue" />
+    <arg name="h_limit_min" value="0"   doc="The minimum allowed field value Hue" />
+    <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" />
+    <arg name="s_limit_min" value="234" doc="The minimum allowed field value Saturation" />
+    <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" />
+    <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" />
+    <arg name="debug_view" value="false" />
+  </include>
+
+  <!-- mask image filter -->
+  <node name="mask_image_filter" pkg="jsk_pcl_ros" type="mask_image_filter">
+    <param name="~negative" value="false" />
+    <remap from="~input" to="$(arg INPUT_CLOUD)" />
+    <remap from="~input/mask" to="/red_hsv_color_filter/image" />
+    <remap from="~input/camera_info" to="$(arg INPUT_CAMERA_INFO)" />
+  </node>
+
+  <node name="extract_indices" pkg="jsk_pcl_ros" type="extract_indices">
+    <remap from="~input" to="$(arg INPUT_CLOUD)" />
+    <remap from="~indices" to="/mask_image_filter/output" />
+  </node>
+
+  <!-- transform object pointcloud to /map frame -->
+  <node name="objects_pointcloud"
+        pkg="nodelet" type="nodelet"
+        args="standalone jsk_pcl_utils/TfTransformCloud">
+    <remap from="~input" to="extract_indices/output" />
+    <rosparam>
+      target_frame_id: map
+    </rosparam>
+  </node>
+
+  <!-- visualize -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find jsk_footstep_planner)/config/color_object_recognition.rviz"
+        output="screen" if="$(arg rviz)"/>
+
+</launch>
