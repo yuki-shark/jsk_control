@@ -145,7 +145,9 @@
 
 ;; move arms backward
 (format t "move arms backward~%")
-(send *ri* :angle-vector #f(0.0 0.0 -20.0 40.0 -20.0 0.0 0.0 0.0 -20.0 40.0 -20.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 60.0 -20.0 -5.0 -80.0 0.0 0.0 -20.0 0.0 60.0 20.0 5.0 -80.0 0.0 0.0 -20.0) 3000)
+(send *ri* :angle-vector #f(0.0 0.0 -20.0 40.0 -20.0 0.0 0.0 0.0 -20.0 40.0 -20.0 0.0 0.0 0.0 0.0 0.0 30.0 0.0 70.0 -20.0 -5.0 -80.0 0.0 0.0 -20.0 0.0 70.0 20.0 5.0 -80.0 0.0 0.0 -20.0) 3000)
+(send *ri* :emergency-release-motion)
+(send *ri* :start-grasp)
 
 (ros::roseus "pub_go_velocity")
 (format t "pub_go_velocity node init~%")
