@@ -33,6 +33,7 @@
     <param name="global_costmap/height" value="20.0" if="$(arg no_static_map)"/>
   </node>
 
+  <!-- send go-veolocity cmd -->
   <node pkg="jsk_footstep_planner" type="pub-go-velocity.l" name="pub_go_velocity" output="screen" />
 
   <node name="rviz" pkg="rviz" type="rviz"

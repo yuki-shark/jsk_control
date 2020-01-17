@@ -14,6 +14,9 @@
     <arg name="rviz" value="false" />
   </include>
 
+  <!-- path follow init -->
+  <node pkg="jsk_footstep_planner" type="path-follow-init.l" name="path_follow_init" output="screen" />
+
   <!-- visualize -->
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_path_planner.rviz"
