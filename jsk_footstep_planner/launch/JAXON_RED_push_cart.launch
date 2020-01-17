@@ -1,0 +1,29 @@
+<launch>
+  <arg name="rviz" default="true" />
+
+  <!-- move base cart -->
+  <include file="$(find jsk_footstep_planner)/launch/move_base_cart.launch" >
+    <arg name="no_static_map"       value="true"/>
+    <arg name="base_global_planner" value="navfn/NavfnROS"/>
+    <arg name="base_local_planner"  value="dwa_local_planner/DWAPlannerROS"/>
+    <arg name="rviz"                value="false" />
+  </include>
+
+  <!-- color object recognition -->
+  <include file="$(find jsk_footstep_planner)/launch/color_object_recognition.launch" >
+    <arg name="rviz" value="false" />
+  </include>
+
+  <!-- filter cart pointcloud -->
+  <include file="$(find jsk_footstep_planner)/launch/filter_cart_pointcloud.launch" >
+    <arg name="rviz" value="false" />
+  </include>
+
+  <!-- push cart init -->
+  <node pkg="jsk_footstep_planner" type="push-cart-init.l" name="push_cart_init" output="screen" />
+  <!-- visualize -->
+  <node name="rviz" pkg="rviz" type="rviz"
+        args="-d $(find jsk_footstep_planner)/config/jaxon_path_planner.rviz"
+        output="screen"/>
+
+</launch>

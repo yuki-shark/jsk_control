@@ -1,0 +1,9 @@
+# global_frame: odom
+global_frame: map
+rolling_window: true
+track_unknown_space: true
+
+plugins:
+  - {name: obstacles_pointcloud,      type: "costmap_2d::ObstacleLayer"}
+  - {name: inflation,                 type: "costmap_2d::InflationLayer"}
+  - {name: object,                    type: "object_navigation_layers::ObjectLayer",  base_class_type: "costmap_2d::Layer"}
