@@ -12,7 +12,7 @@
 
     <param name="base_global_planner" value="$(arg base_global_planner)"/>
     <param name="base_local_planner" value="$(arg base_local_planner)"/>
-    <rosparam file="$(find jsk_footstep_planner)/config/planner.yaml" command="load"/>
+    <rosparam file="$(find jsk_footstep_planner)/config/planner_cart.yaml" command="load"/>
 
     <!-- observation sources located in costmap_common.yaml -->
     <rosparam file="$(find jsk_footstep_planner)/config/costmap_common_cart.yaml" command="load" ns="global_costmap" />
@@ -32,8 +32,11 @@
     <param name="global_costmap/height" value="20.0" if="$(arg no_static_map)"/>
   </node>
 
+  <!-- broad cart_center tf -->
+  <node pkg="tf" type="static_transform_publisher" name="cart_center_broadcaster" args="1.1 0.0 0.0 0.0 0.0 0.0 BODY cart_center 100" />
+
   <!-- send go-veolocity cmd -->
-  <node pkg="jsk_footstep_planner" type="pub-go-velocity.l" name="pub_go_velocity" output="screen" />
+  <node pkg="jsk_footstep_planner" type="pub-go-velocity-cart.l" name="pub_go_velocity" output="screen" />
 
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_move_base.rviz"

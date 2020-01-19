@@ -31,13 +31,16 @@
          )
    (send *ri* :set-gait-generator-param
          :stride-limitation-type 1
-         :stride-limitation-for-circle-type #f(0.15 0.3 15 0.1 0.14)
+         ;; :stride-limitation-for-circle-type #f(0.15 0.3 15 0.1 0.14)
+         :stride-limitation-for-circle-type #f(0.15 0.4 15 0.1 0.14) ;; [normal] front outside angle rear inside
+         ;; max vel_x = front / step-time
+         ;; max vel_y = (outside - inside) / (2 * step-time)
          :default-orbit-type :rectangle
          :default-step-height 0.1
          :default-step-time step-time
          :default-double-support-ratio double-ratio
          :swing-trajectory-delay-time-offset (* step-time (- 1.0 double-ratio) 0.25)
-         :overwritable-stride-limitation #f(0.35 0.55 0 0.35 0.14)
+         :overwritable-stride-limitation #f(0.35 0.55 0 0.35 0.14) ;; [footstep modification] front outside angle rear inside
          :margin-time-ratio 0.1
          :min-time-mgn 0.3
          :min-time 0.6
@@ -69,7 +72,7 @@
   (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
   (send *ri* :wait-interpolation)
   (send *ri* :set-auto-balancer-param
-        :is-hand-fix-mode nil
+        :is-hand-fix-mode t
         :use-limb-stretch-avoidance nil
         :ik-mode 1)
   (if use-hand?

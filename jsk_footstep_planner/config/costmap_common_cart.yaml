@@ -1,7 +1,11 @@
-footprint: [[-0.25, -0.4], [-0.25, 0.4], [1.25, 0.4], [1.25, -0.4]]
+# robot_base_frame : BODY
+# footprint: [[-0.25, -0.4], [-0.25, 0.4], [1.25, 0.4], [1.25, -0.4]]
+# robot_base_frame : cart_center
+footprint: [[-1.35, -0.4], [-1.35, 0.4], [0.15, 0.4], [0.15, -0.4]]
 footprint_padding: 0.01
 
-robot_base_frame: BODY
+# robot_base_frame: BODY
+robot_base_frame: cart_center
 update_frequency: 4.0
 publish_frequency: 3.0
 transform_tolerance: 0.5
