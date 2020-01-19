@@ -1,5 +1,6 @@
 <launch>
   <arg name="rviz" default="true" />
+  <arg name="init" default="true" />
 
   <!-- move base cart -->
   <include file="$(find jsk_footstep_planner)/launch/move_base_cart.launch" >
@@ -20,10 +21,12 @@
   </include>
 
   <!-- push cart init -->
-  <node pkg="jsk_footstep_planner" type="push-cart-init.l" name="push_cart_init" output="screen" />
+  <node pkg="jsk_footstep_planner" type="push-cart-init.l"
+        name="push_cart_init" output="screen" if="$(arg init)"/>
+
   <!-- visualize -->
   <node name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find jsk_footstep_planner)/config/jaxon_path_planner.rviz"
-        output="screen"/>
+        args="-d $(find jsk_footstep_planner)/config/jaxon_push_cart.rviz"
+        output="screen" if="$(arg rviz)"/>
 
 </launch>
