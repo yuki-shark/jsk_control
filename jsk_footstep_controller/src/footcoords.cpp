@@ -131,8 +131,8 @@ namespace jsk_footstep_controller
                                            &Footcoords::odomInitTriggerCallback, this);
     periodic_update_timer_ = pnh.createTimer(ros::Duration(1.0 / 25),
                                              boost::bind(&Footcoords::periodicTimerCallback, this, _1));
-    sub_lfoot_force_.subscribe(nh, "lfsensor", 50);
-    sub_rfoot_force_.subscribe(nh, "rfsensor", 50);
+    sub_lfoot_force_.subscribe(nh, "off_lfsensor", 50);
+    sub_rfoot_force_.subscribe(nh, "off_rfsensor", 50);
     sub_joint_states_.subscribe(nh, "joint_states",50);
     sub_zmp_.subscribe(nh, "zmp", 50);
     floor_coeffs_sub_ = pnh.subscribe("/floor_coeffs", 1,
@@ -143,6 +143,8 @@ namespace jsk_footstep_controller
     sync_->registerCallback(boost::bind(&Footcoords::synchronizeForces, this, _1, _2, _3, _4));
     synchronized_forces_sub_ = pnh.subscribe("synchronized_forces", 20,
                                              &Footcoords::filter, this);
+    is_air_counter_ = 0;
+    detection_count_to_air_ = 500;
   }
 
   Footcoords::~Footcoords()
@@ -311,7 +313,7 @@ namespace jsk_footstep_controller
       geometry_msgs::TransformStamped ros_zmp_coords;
       ros_zmp_coords.header = zmp->header;
       ros_zmp_coords.child_frame_id = zmp_frame_id_;
-      Eigen::Affine3d zmp_pose = Eigen::Affine3d::Identity() * Eigen::Translation3d(zmp_point);        
+      Eigen::Affine3d zmp_pose = Eigen::Affine3d::Identity() * Eigen::Translation3d(zmp_point);
       tf::transformEigenToMsg(zmp_pose, ros_zmp_coords.transform);
       std::vector<geometry_msgs::TransformStamped> tf_transforms;
       tf_transforms.push_back(ros_zmp_coords);
@@ -321,7 +323,7 @@ namespace jsk_footstep_controller
       }
     }
   }
-  
+
   void Footcoords::updateChain(std::map<std::string, double>& joint_angles,
                                KDL::Chain& chain,
                                tf::Pose& output_pose)
@@ -420,8 +422,10 @@ namespace jsk_footstep_controller
       return;
     }
     // resolve tf
-    double lfoot_force = applyLowPassFilter(lfoot_force_vector[2], prev_lforce_);
-    double rfoot_force = applyLowPassFilter(rfoot_force_vector[2], prev_rforce_);
+    // double lfoot_force = applyLowPassFilter(lfoot_force_vector[2], prev_lforce_);
+    // double rfoot_force = applyLowPassFilter(rfoot_force_vector[2], prev_rforce_);
+    double lfoot_force = lfoot_force_vector[2];
+    double rfoot_force = rfoot_force_vector[2];
 
     // publish lowlevel info
     FootCoordsLowLevelInfo info;
@@ -437,17 +441,23 @@ namespace jsk_footstep_controller
 
     if (lfoot_force >= force_thr_ && rfoot_force >= force_thr_) {
       support_status_ = BOTH_GROUND;
+      is_air_counter_ = 0;
     }
     else if (lfoot_force < force_thr_ && rfoot_force < force_thr_) {
-      support_status_ = AIR;
+      is_air_counter_++;
+      if (is_air_counter_ >= detection_count_to_air_) {
+        support_status_ = AIR;
+      }
     }
     else if (lfoot_force >= force_thr_) {
       // only left
       support_status_ = LLEG_GROUND;
+      is_air_counter_ = 0;
     }
     else if (rfoot_force >= force_thr_) {
       // only right
       support_status_ = RLEG_GROUND;
+      is_air_counter_ = 0;
     }
     estimateOdometry();
     estimateVelocity(msg->header.stamp, angles);
@@ -702,7 +712,7 @@ namespace jsk_footstep_controller
     state_msg.data = state;
     pub_state_.publish(state_msg);
   }
-  
+
   void Footcoords::publishContactState(const ros::Time& stamp)
   {
     GroundContactState contact_state;
@@ -712,18 +722,18 @@ namespace jsk_footstep_controller
         = GroundContactState::CONTACT_AIR;
     }
     else if (support_status_ == LLEG_GROUND) {
-      contact_state.contact_state 
+      contact_state.contact_state
         = GroundContactState::CONTACT_LLEG_GROUND;
     }
     else if (support_status_ == RLEG_GROUND) {
-      contact_state.contact_state 
+      contact_state.contact_state
         = GroundContactState::CONTACT_RLEG_GROUND;
     }
     else if (support_status_ == BOTH_GROUND) {
       contact_state.contact_state
         = GroundContactState::CONTACT_BOTH_GROUND;
     }
-    try 
+    try
     {
       tf::StampedTransform foot_transform;
       tf_listener_->lookupTransform(
@@ -799,7 +809,7 @@ namespace jsk_footstep_controller
 
     }
   }
-  
+
   bool Footcoords::computeMidCoords(const ros::Time& stamp)
   {
     if (!waitForEndEffectorTransformation(stamp)) {
@@ -807,7 +817,7 @@ namespace jsk_footstep_controller
       return false;
     }
     else {
-      try 
+      try
       {
         tf::StampedTransform lfoot_transform;
         tf_listener_->lookupTransform(
@@ -951,7 +961,7 @@ namespace jsk_footstep_controller
   void Footcoords::publishTF(const ros::Time& stamp)
   {
     // publish midcoords_ and ground_cooords_
-    geometry_msgs::TransformStamped ros_midcoords, 
+    geometry_msgs::TransformStamped ros_midcoords,
       ros_ground_coords, ros_odom_to_body_coords,
       ros_body_on_odom_coords, ros_odom_init_coords;
     // ros_midcoords: ROOT -> ground
@@ -986,13 +996,13 @@ namespace jsk_footstep_controller
     getRollPitch(odom_pose_, roll, pitch);
     Eigen::Affine3d body_on_odom_pose = (Eigen::Translation3d(0,
                                                               0,
-                                                              odom_pose_.translation()[2]) * 
+                                                              odom_pose_.translation()[2]) *
                                          Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) *
                                          Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()));
     midcoords_.getRotation().normalize();
     Eigen::Affine3d odom_init_pose = (Eigen::Translation3d(odom_init_pose_.translation()[0],
                                                            odom_init_pose_.translation()[1],
-                                                           odom_init_pose_.translation()[2]) * 
+                                                           odom_init_pose_.translation()[2]) *
                                       Eigen::AngleAxisd(getYaw(odom_init_pose_), Eigen::Vector3d::UnitZ()));
 
     tf::transformTFToMsg(midcoords_, ros_midcoords.transform);
@@ -1023,14 +1033,14 @@ namespace jsk_footstep_controller
     floor_plane.project(odom_pose_, odom_init_pose_); // this projection do not consider yaw orientations
     odom_init_pose_ = (Eigen::Translation3d(odom_init_pose_.translation()) *
                        Eigen::AngleAxisd(getYaw(odom_pose_), Eigen::Vector3d::UnitZ())); // assuming that projected plane is horizontal
-    
+
     // publish odom_init topics
     // whether invert_odom_init is true or not odom_init_pose_stamped and odom_init_transform is described in odom coordinates.
     geometry_msgs::TransformStamped ros_odom_init_coords;
     geometry_msgs::PoseStamped ros_odom_init_pose_stamped;
     Eigen::Affine3d odom_init_pose = (Eigen::Translation3d(odom_init_pose_.translation()[0],
                                                            odom_init_pose_.translation()[1],
-                                                           odom_init_pose_.translation()[2]) * 
+                                                           odom_init_pose_.translation()[2]) *
                                       Eigen::AngleAxisd(getYaw(odom_init_pose_), Eigen::Vector3d::UnitZ()));
     ros_odom_init_coords.header.stamp = ros::Time::now();
     ros_odom_init_coords.header.frame_id = parent_frame_id_;

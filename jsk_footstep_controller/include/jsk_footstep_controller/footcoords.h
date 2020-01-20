@@ -120,10 +120,10 @@ namespace jsk_footstep_controller
     };
 
   protected:
-    
+
     // methods
 
-    /* 
+    /*
      * virtual void filter(const geometry_msgs::WrenchStamped::ConstPtr& lfoot,
      *                     const geometry_msgs::WrenchStamped::ConstPtr& rfoot);
      */
@@ -244,6 +244,8 @@ namespace jsk_footstep_controller
     double alpha_;
     double sampling_time_;
     bool publish_odom_tf_;
+    int is_air_counter_;
+    int detection_count_to_air_;
   private:
   };
 }

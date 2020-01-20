@@ -12,6 +12,8 @@ from hrpsys_ros_bridge.msg import MotorStates
 # global variable
 g_previous_st_controller_mode = None
 is_servo_on = False
+is_air_counter = 0
+detection_count_to_air = 500
 
 def controllerModeToString(msg):
     is_lleg_contact = None
@@ -28,9 +30,14 @@ def controllerModeToString(msg):
             else:
                 is_rleg_contact = False
     if is_lleg_contact or is_rleg_contact:
+        is_air_counter = 0
         return "MODE_ST"
     else:
-        return "MODE_AIR"
+        if is_air_counter >= detection_count_to_air:
+            return "MODE_AIR"
+        else:
+            is_air_counter += 1
+            return "MODE_ST"
 
 def isChangedControllerMode(actual_from, actual_to, expected_from, expected_to):
     if (actual_from in expected_from and
@@ -51,13 +58,13 @@ def trig():
     sound.volume = 1.0
     sound.arg = "Robot stands on the ground."
     g_robotsound_pub.publish(sound)
-    
+
 def contactStatesCallback(msg):
     global g_previous_st_controller_mode
     global g_odom_init_trigger_pub, g_robotsound_pub
     controller_mode = controllerModeToString(msg)
-    if (controller_mode == "MODE_AIR" or 
-        controller_mode == "MODE_IDLE" or 
+    if (controller_mode == "MODE_AIR" or
+        controller_mode == "MODE_IDLE" or
         controller_mode == "MODE_ST"):
         if g_previous_st_controller_mode == None:
             g_previous_st_controller_mode = controller_mode
@@ -82,4 +89,3 @@ if __name__ == "__main__":
     g_odom_init_trigger_pub = rospy.Publisher("/odom_init_trigger", Empty)
     g_robotsound_pub = rospy.Publisher("/robotsound", SoundRequest)
     rospy.spin()
-
