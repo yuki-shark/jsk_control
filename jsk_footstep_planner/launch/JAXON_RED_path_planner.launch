@@ -1,5 +1,6 @@
 <launch>
   <arg name="rviz" default="true" />
+  <arg name="init" default="true" />
 
   <!-- move base -->
   <include file="$(find jsk_footstep_planner)/launch/example_move_base.launch" >
@@ -15,11 +16,16 @@
   </include>
 
   <!-- path follow init -->
-  <node pkg="jsk_footstep_planner" type="path-follow-init.l" name="path_follow_init" output="screen" />
+  <node pkg="jsk_footstep_planner" type="path-follow-init.l"
+        name="path_follow_init" output="screen" if="$(arg init)"/>
+
+  <!-- publish heightmap gradient -->
+  <node pkg="safe_footstep_planner" type="calc_heightmap_gradient"
+        name="calc_heightmap_gradient" output="screen"/>
 
   <!-- visualize -->
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_path_planner.rviz"
-        output="screen"/>
+        output="screen" if="$(arg rviz)"/>
 
 </launch>
