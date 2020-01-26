@@ -21,7 +21,10 @@
 
   <!-- publish heightmap gradient -->
   <node pkg="safe_footstep_planner" type="calc_heightmap_gradient"
-        name="calc_heightmap_gradient" output="screen"/>
+        name="calc_heightmap_gradient" output="screen">
+    <remap from="~input" to="/accumulated_heightmap/output" />
+    <remap from="~output" to="/heightmap_gradient" />
+  </node>
 
   <!-- visualize -->
   <node name="rviz" pkg="rviz" type="rviz"
