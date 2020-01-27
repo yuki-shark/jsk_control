@@ -16,7 +16,8 @@
   (setq yaw (rad2deg (send angular :z)))
 
   ;; transform cart vel to robot vel
-  (setq l 1.1)
+  ;; (setq l 1.1)
+  (setq l 0.5)
   (setq dt 0.7)
   (setq x (+ x (/ (- l (* l (cos (* (send angular :z) dt)))) dt)))
   (setq y (- y (/ (* l (sin (* (send angular :z) dt))) dt)))
