@@ -16,40 +16,13 @@
   </include>
 
   <!-- filter cart pointcloud -->
-  <include file="$(find jsk_footstep_planner)/launch/filter_cart_pointcloud.launch" >
-    <arg name="rviz" value="false" />
-  </include>
-
-  <!-- make heightmap from filtered pointcloud -->
-  <node name="filter_cart_heightmap" pkg="jsk_pcl_ros" type="heightmap_converter">
-    <remap from="~input" to="/filter_cart_pointcloud/output" />
-    <rosparam>
-      min_x: -3.0
-      max_x: 13.0
-      min_y: -8.0
-      max_y:  8.0
-      resolution_x: 1600 ## 0.01 m/pixel
-      resolution_y: 1600 ## 0.01 m/pixel
-    </rosparam>
-  </node>
-  <node name="morphological_filter_cart_heightmap" pkg="jsk_pcl_ros" type="heightmap_morphological_filtering">
-    <remap from="~input" to="/filter_cart_heightmap/output" />
-    <rosparam>
-      mask_size: 3 ## cover within 0.06m
-      max_variance: 0.0002 ### (* 0.014 0.014)
-      smooth_method: average_distance
-      use_bilateral: true
-      bilateral_filter_size: 4
-      bilateral_sigma_color: 0.028
-      bilateral_sigma_space: 3
-    </rosparam>
-  </node>
+  <node pkg="jsk_footstep_planner" type="robot_bbox_publisher.py"
+        name="robot_bbox_publisher" output="screen"/>
 
   <!-- publish heightmap gradient -->
   <node pkg="safe_footstep_planner" type="calc_heightmap_gradient"
         name="calc_heightmap_gradient" output="screen">
-    <!-- <remap from="~input" to="/filter_cart_heightmap/output" /> -->
-    <remap from="~input" to="/morphological_filter_cart_heightmap/output" />
+    <remap from="~input" to="/accumulated_heightmap/output" />
     <remap from="~output" to="/heightmap_gradient" />
   </node>
 
