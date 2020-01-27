@@ -3,10 +3,13 @@
   <arg name="init" default="true" />
 
   <!-- move base cart -->
-  <include file="$(find jsk_footstep_planner)/launch/move_base_cart.launch" >
+  <include file="$(find jsk_footstep_planner)/launch/example_move_base.launch" >
     <arg name="no_static_map"       value="true"/>
+    <arg name="push_cart"           value="true"/>
     <arg name="base_global_planner" value="navfn/NavfnROS"/>
     <arg name="base_local_planner"  value="dwa_local_planner/DWAPlannerROS"/>
+    <arg name="planner_file"        value="$(find jsk_footstep_planner)/config/planner_cart.yaml" />
+    <arg name="costmap_common_file" value="$(find jsk_footstep_planner)/config/costmap_common_cart.yaml" />
     <arg name="rviz"                value="false" />
   </include>
 
