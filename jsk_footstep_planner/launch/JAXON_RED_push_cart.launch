@@ -32,11 +32,24 @@
       resolution_y: 1600 ## 0.01 m/pixel
     </rosparam>
   </node>
+  <node name="morphological_filter_cart_heightmap" pkg="jsk_pcl_ros" type="heightmap_morphological_filtering">
+    <remap from="~input" to="/filter_cart_heightmap/output" />
+    <rosparam>
+      mask_size: 3 ## cover within 0.06m
+      max_variance: 0.0002 ### (* 0.014 0.014)
+      smooth_method: average_distance
+      use_bilateral: true
+      bilateral_filter_size: 4
+      bilateral_sigma_color: 0.028
+      bilateral_sigma_space: 3
+    </rosparam>
+  </node>
 
   <!-- publish heightmap gradient -->
   <node pkg="safe_footstep_planner" type="calc_heightmap_gradient"
         name="calc_heightmap_gradient" output="screen">
-    <remap from="~input" to="/filter_cart_heightmap/output" />
+    <!-- <remap from="~input" to="/filter_cart_heightmap/output" /> -->
+    <remap from="~input" to="/morphological_filter_cart_heightmap/output" />
     <remap from="~output" to="/heightmap_gradient" />
   </node>
 
