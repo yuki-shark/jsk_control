@@ -9,14 +9,26 @@
   <node name="$(arg MANAGER)" pkg="nodelet" type="nodelet" args="manager" />
 
   <!-- extract red boxes -->
+  <!-- <include file="$(find opencv_apps)/launch/hsv_color_filter.launch" > -->
+  <!--   <arg name="node_name" value="red_hsv_color_filter" /> -->
+  <!--   <arg name="image" value="$(arg INPUT_IMAGE)" /> -->
+  <!--   <arg name="h_limit_max" value="10"  doc="The maximum allowed field value Hue" /> -->
+  <!--   <arg name="h_limit_min" value="0"   doc="The minimum allowed field value Hue" /> -->
+  <!--   <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" /> -->
+  <!--   <arg name="s_limit_min" value="234" doc="The minimum allowed field value Saturation" /> -->
+  <!--   <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" /> -->
+  <!--   <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" /> -->
+  <!--   <arg name="debug_view" value="false" /> -->
+  <!-- </include> -->
+
+  <!-- extract green boxes -->
   <include file="$(find opencv_apps)/launch/hsv_color_filter.launch" >
     <arg name="node_name" value="red_hsv_color_filter" />
     <arg name="image" value="$(arg INPUT_IMAGE)" />
-    <!-- choreonoid -->
-    <arg name="h_limit_max" value="10"  doc="The maximum allowed field value Hue" />
-    <arg name="h_limit_min" value="0"   doc="The minimum allowed field value Hue" />
+    <arg name="h_limit_max" value="144" doc="The maximum allowed field value Hue" />
+    <arg name="h_limit_min" value="90"  doc="The minimum allowed field value Hue" />
     <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" />
-    <arg name="s_limit_min" value="234" doc="The minimum allowed field value Saturation" />
+    <arg name="s_limit_min" value="150" doc="The minimum allowed field value Saturation" />
     <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" />
     <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" />
     <arg name="debug_view" value="false" />
@@ -42,6 +54,7 @@
     <remap from="~input" to="extract_indices/output" />
     <rosparam>
       target_frame_id: map
+      tf_queue_size: 3
     </rosparam>
   </node>
 
