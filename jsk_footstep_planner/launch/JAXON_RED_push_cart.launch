@@ -27,6 +27,11 @@
         name="calc_heightmap_gradient" output="screen">
     <remap from="~input" to="/accumulated_heightmap/output" />
     <remap from="~output" to="/heightmap_gradient" />
+    <param name="blur_ksize" value="7" />
+    <param name="sobel_ksize" value="15" />
+    <param name="erode_ksize" value="11" />
+    <param name="floor_height" value="0.06" />
+    <param name="grad_scale" value="500000" />
   </node>
 
   <!-- push cart init -->
@@ -37,5 +42,12 @@
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_push_cart.rviz"
         output="screen" if="$(arg rviz)"/>
+
+  <!-- visited path -->
+  <node pkg="jsk_footstep_planner" type="visited_path_publisher.py"
+        name="visited_path_publisher" output="screen">
+    <param name="freq" value="5" />
+    <param name="save_time" value="30" />
+  </node>
 
 </launch>
