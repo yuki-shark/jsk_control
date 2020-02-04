@@ -6,10 +6,11 @@ from nav_msgs.msg import Path
 from geometry_msgs.msg import PoseStamped, Quaternion
 
 rospy.init_node("visited_path_publisher", anonymous=True)
-freq      = rospy.get_param('~freq', 5)
-save_time = rospy.get_param('~save_time', 30)
-pub       = rospy.Publisher("/visited_path", Path, queue_size=10)
-rate      = rospy.Rate(freq)
+freq        = rospy.get_param('~freq', 5)
+save_time   = rospy.get_param('~save_time', 30)
+robot_frame = rospy.get_param('~robot_frame', "/BODY")
+pub         = rospy.Publisher("/visited_path", Path, queue_size=10)
+rate        = rospy.Rate(freq)
 
 path_msg = Path()
 listener = tf.TransformListener()
@@ -18,7 +19,7 @@ poses    = []
 while not rospy.is_shutdown():
 
   try:
-    (trans,rot) = listener.lookupTransform('/map', '/cart_center', rospy.Time(0))
+    (trans,rot) = listener.lookupTransform('/map', robot_frame, rospy.Time(0))
   except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
     continue
 
