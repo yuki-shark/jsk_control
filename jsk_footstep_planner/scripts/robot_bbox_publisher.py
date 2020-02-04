@@ -9,6 +9,7 @@ from geometry_msgs.msg import Point, Quaternion, Vector3
 rospy.init_node("robot_bbox_publisher", anonymous=True)
 p = rospy.Publisher("/robot_bbox", BoundingBox, queue_size=10)
 r = rospy.Rate(100)
+transport_object = rospy.get_param('~transport_object', "push_cart")
 
 rospy.loginfo("Clearing /accumulated_heightmap/reset due to change of robot_bbox")
 srv = rospy.ServiceProxy("/accumulated_heightmap/reset", EmptySrv)
@@ -19,9 +20,20 @@ except:
 
 bbox_msg = BoundingBox()
 bbox_msg.header.frame_id = 'body_on_odom'
-position = Point(0.75, 0.0, 1.25)
-orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
-dimensions = Vector3(1.5, 1.2, 3.0)
+
+if transport_object == "push_cart":
+  position = Point(0.75, 0.0, 1.25)
+  orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
+  dimensions = Vector3(1.5, 1.2, 3.0)
+elif transport_object == "wheelbarrow":
+  position = Point(0.9, 0.0, 1.25)
+  orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
+  dimensions = Vector3(2.0, 1.2, 3.0)
+else:
+  position = Point(0.0, 0.0, 1.25)
+  orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
+  dimensions = Vector3(0.5, 1.0, 3.0)
+
 bbox_msg.pose.position = position
 bbox_msg.pose.orientation = orientation
 bbox_msg.dimensions = dimensions
