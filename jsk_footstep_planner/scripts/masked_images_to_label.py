@@ -51,7 +51,6 @@ class image_converter:
     # convert type to "32SC1"
     # label_image = label_image.astype(np.int32)
     # convert type to "MONO8"
-    label_image *= 80
     label_image = label_image.astype(np.uint8)
 
     try:
@@ -64,7 +63,7 @@ class image_converter:
     self.image_pub.publish(label_msg)
 
 def main(args):
-  rospy.init_node('image_converter', anonymous=True)
+  rospy.init_node('masked_images_to_label', anonymous=True)
   ic = image_converter()
   try:
     rospy.spin()

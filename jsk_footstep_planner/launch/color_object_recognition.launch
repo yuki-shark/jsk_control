@@ -38,6 +38,10 @@
         name="masked_images_to_label" output="screen">
   </node>
 
+  <node pkg="jsk_footstep_planner" type="label_to_cost.py"
+        name="label_to_cost" output="screen">
+  </node>
+
   <!-- visualize -->
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find jsk_footstep_planner)/config/color_object_recognition.rviz"
