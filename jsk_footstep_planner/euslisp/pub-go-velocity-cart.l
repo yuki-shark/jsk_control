@@ -17,7 +17,7 @@
 
   ;; transform cart vel to robot vel
   ;; (setq l 1.1)
-  (setq l 0.5)
+  (setq l *l*)
   (setq dt 0.7)
   (setq x (+ x (/ (- l (* l (cos (* (send angular :z) dt)))) dt)))
   (setq y (- y (/ (* l (sin (* (send angular :z) dt))) dt)))
@@ -40,6 +40,7 @@
 
 (ros::roseus "pub_go_velocity")
 (format t "pub_go_velocity node init~%")
+(setq *l* (ros::get-param "~distance_to_cart_center" 0.5))
 (ros::subscribe "cmd_vel" geometry_msgs::Twist #'callback 1)
 (ros::subscribe "move_base/result" move_base_msgs::MoveBaseActionResult #'result-callback 1)
 (do-until-key

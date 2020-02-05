@@ -13,6 +13,8 @@
   <arg name="costmap_global_static_file"     default="$(find jsk_footstep_planner)/config/costmap_global_static.yaml" />
   <arg name="costmap_local_file"             default="$(find jsk_footstep_planner)/config/costmap_local.yaml" />
 
+  <arg name="distance_to_cart_center" default="0.5" />
+
   <arg name="rviz" default="true" />
 
   <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
@@ -41,13 +43,13 @@
 
   <!-- send go-veolocity cmd -->
   <node pkg="jsk_footstep_planner" type="pub-go-velocity.l" name="pub_go_velocity" output="screen" unless="$(arg push_cart)"/>
-  <node pkg="jsk_footstep_planner" type="pub-go-velocity-cart.l" name="pub_go_velocity" output="screen" if="$(arg push_cart)"/>
+  <node pkg="jsk_footstep_planner" type="pub-go-velocity-cart.l" name="pub_go_velocity" output="screen" if="$(arg push_cart)">
+    <param name="distance_to_cart_center" value="$(arg distance_to_cart_center)" />
+  </node>
 
   <!-- broad cart_center tf -->
-  <!-- <node pkg="tf" type="static_transform_publisher" name="cart_center_broadcaster" -->
-  <!--       args="1.1 0.0 0.0 0.0 0.0 0.0 BODY cart_center 100" if="$(arg push_cart)"/> -->
   <node pkg="tf" type="static_transform_publisher" name="cart_center_broadcaster"
-        args="0.5 0.0 0.0 0.0 0.0 0.0 BODY cart_center 100" if="$(arg push_cart)"/>
+        args="$(arg distance_to_cart_center) 0.0 0.0 0.0 0.0 0.0 BODY cart_center 100" if="$(arg push_cart)"/>
 
   <node name="rviz" pkg="rviz" type="rviz"
         args="-d $(find jsk_footstep_planner)/config/jaxon_move_base.rviz"
