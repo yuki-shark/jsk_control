@@ -15,13 +15,19 @@
   (setq y (send linear :y))
   (setq yaw (rad2deg (send angular :z)))
 
+  (when (eq *mode* 1)
+    (if (> (abs (/ x 0.2)) (abs (/ (send angular :z) 0.128)))
+        (setq yaw 0)
+      (setq x 0))
+    )
+
   ;; transform cart vel to robot vel
   ;; (setq l 1.1)
   (setq l *l*)
   (setq dt 0.7)
   (setq x (+ x (/ (- l (* l (cos (* (send angular :z) dt)))) dt)))
   (setq y (- y (/ (* l (sin (* (send angular :z) dt))) dt)))
-  ;; (format t "ox : ~A  oy : ~A  yaw : ~A  dt : ~A  x : ~A  y: ~A~% " (send linear :x) (send linear :y) (send angular :z) dt x y)
+  ;; (format t "l : ~A  ox : ~A  oy : ~A  yaw : ~A  dt : ~A  x : ~A  y: ~A~% " l (send linear :x) (send linear :y) (send angular :z) dt x y)
 
   ;; (setq y (- y (* l (send angular :z))))
 
@@ -41,6 +47,7 @@
 (ros::roseus "pub_go_velocity")
 (format t "pub_go_velocity node init~%")
 (setq *l* (ros::get-param "~distance_to_cart_center" 0.5))
+(setq *mode* (ros::get-param "~forward_or_rotate_mode" 0))
 (ros::subscribe "cmd_vel" geometry_msgs::Twist #'callback 1)
 (ros::subscribe "move_base/result" move_base_msgs::MoveBaseActionResult #'result-callback 1)
 (do-until-key
