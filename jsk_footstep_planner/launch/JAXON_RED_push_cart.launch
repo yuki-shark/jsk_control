@@ -48,6 +48,7 @@
         name="visited_path_publisher" output="screen">
     <param name="freq" value="5" />
     <param name="save_time" value="30" />
+    <param name="robot_frame" value="/cart_center" />
   </node>
 
 </launch>

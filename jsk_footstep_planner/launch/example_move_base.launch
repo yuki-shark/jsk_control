@@ -14,6 +14,7 @@
   <arg name="costmap_local_file"             default="$(find jsk_footstep_planner)/config/costmap_local.yaml" />
 
   <arg name="distance_to_cart_center" default="0.5" />
+  <arg name="forward_or_rotate_mode"  default="0" />
 
   <arg name="rviz" default="true" />
 
@@ -45,6 +46,7 @@
   <node pkg="jsk_footstep_planner" type="pub-go-velocity.l" name="pub_go_velocity" output="screen" unless="$(arg push_cart)"/>
   <node pkg="jsk_footstep_planner" type="pub-go-velocity-cart.l" name="pub_go_velocity" output="screen" if="$(arg push_cart)">
     <param name="distance_to_cart_center" value="$(arg distance_to_cart_center)" />
+    <param name="forward_or_rotate_mode"  value="$(arg forward_or_rotate_mode)"  />
   </node>
 
   <!-- broad cart_center tf -->

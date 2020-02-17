@@ -15,7 +15,7 @@
     <arg name="h_limit_max" value="144" doc="The maximum allowed field value Hue" />
     <arg name="h_limit_min" value="90"  doc="The minimum allowed field value Hue" />
     <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" />
-    <arg name="s_limit_min" value="150" doc="The minimum allowed field value Saturation" />
+    <arg name="s_limit_min" value="170" doc="The minimum allowed field value Saturation" />
     <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" />
     <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" />
     <arg name="debug_view" value="false" />
@@ -28,7 +28,7 @@
     <arg name="h_limit_max" value="282" doc="The maximum allowed field value Hue" />
     <arg name="h_limit_min" value="170" doc="The minimum allowed field value Hue" />
     <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" />
-    <arg name="s_limit_min" value="150" doc="The minimum allowed field value Saturation" />
+    <arg name="s_limit_min" value="170" doc="The minimum allowed field value Saturation" />
     <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" />
     <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" />
     <arg name="debug_view" value="false" />

@@ -2,13 +2,19 @@
   <arg name="rviz" default="true" />
   <arg name="init" default="true" />
 
-  <!-- move base -->
+  <!-- move base cart -->
   <include file="$(find jsk_footstep_planner)/launch/example_move_base.launch" >
     <arg name="no_static_map"       value="true"/>
+    <arg name="push_cart"           value="true"/>
     <arg name="base_global_planner" value="navfn/NavfnROS"/>
     <arg name="base_local_planner"  value="dwa_local_planner/DWAPlannerROS"/>
-    <!-- <arg name="base_local_planner"  value="base_local_planner/TrajectoryPlannerROS"/> -->
+    <arg name="planner_file"        value="$(find jsk_footstep_planner)/config/planner_cart.yaml" />
+    <arg name="costmap_common_file" value="$(find jsk_footstep_planner)/config/costmap_common_wb.yaml" />
     <arg name="rviz"                value="false" />
+    <!-- <arg name="distance_to_cart_center" value="1.1" /> -->
+    <arg name="distance_to_cart_center" value="1.45" />
+    <!-- <arg name="forward_or_rotate_mode"  value="1" /> -->
+    <arg name="forward_or_rotate_mode"  value="0" />
   </include>
 
   <!-- color object recognition -->
@@ -16,9 +22,11 @@
     <arg name="rviz" value="false" />
   </include>
 
-  <!-- path follow init -->
-  <node pkg="jsk_footstep_planner" type="path-follow-init.l"
-        name="path_follow_init" output="screen" if="$(arg init)"/>
+  <!-- filter cart pointcloud -->
+  <node pkg="jsk_footstep_planner" type="robot_bbox_publisher.py"
+        name="robot_bbox_publisher" output="screen" >
+    <param name="transport_object" value="wheelbarrow" />
+  </node>
 
   <!-- publish heightmap gradient -->
   <node pkg="safe_footstep_planner" type="calc_heightmap_gradient"
@@ -29,20 +37,24 @@
     <param name="sobel_ksize" value="15" />
     <param name="erode_ksize" value="11" />
     <param name="floor_height" value="0.04" />
-    <param name="grad_scale" value="100000" />
+    <param name="grad_scale" value="10000000" />
     <param name="use_height_layer" value="true" />
     <param name="height_ksize" value="5" />
-    <param name="grad_th" value="20" />
-    <param name="height_th" value="0.12" />
-    <param name="height_cost" value="20.0" />
+    <param name="grad_th" value="3.0" />
+    <param name="height_th" value="0.15" />
+    <param name="height_cost" value="0.0" />
   </node>
 
   <!-- consider steppable region -->
   <include file="$(find safe_footstep_planner)/launch/steppable_region_choreonoid.launch" />
 
+  <!-- push cart init -->
+  <node pkg="jsk_footstep_planner" type="wheelbarrow-init.l"
+        name="wheelbarrow_init" output="screen" if="$(arg init)"/>
+
   <!-- visualize -->
   <node name="rviz" pkg="rviz" type="rviz"
-        args="-d $(find jsk_footstep_planner)/config/jaxon_path_planner.rviz"
+        args="-d $(find jsk_footstep_planner)/config/jaxon_push_cart.rviz"
         output="screen" if="$(arg rviz)"/>
 
   <!-- visited path -->
@@ -50,7 +62,7 @@
         name="visited_path_publisher" output="screen">
     <param name="freq" value="5" />
     <param name="save_time" value="30" />
-    <param name="robot_frame" value="/BODY" />
+    <param name="robot_frame" value="/cart_center" />
   </node>
 
 </launch>
