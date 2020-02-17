@@ -57,15 +57,17 @@ DWAPlannerROS:
   acc_lim_y: 1.0
   acc_lim_th: 1.0
 
-  max_vel_x: 0.21
-  min_vel_x: -0.1
-  max_vel_y: 0.18
-  min_vel_y: -0.18
+  max_vel_x: 0.125
+  min_vel_x: -0.07
+  max_vel_y: 0.095
+  min_vel_y: -0.095
 
-  max_trans_vel: 0.28
-  min_trans_vel: 0.1
-  max_rot_vel: 0.26
-  min_rot_vel: 0.03
+  max_trans_vel: 0.135
+  # min_trans_vel: 0.7
+  min_trans_vel: 0.0
+  max_rot_vel: 0.21
+  # min_rot_vel: 0.03
+  min_rot_vel: 0.0
 
   # Goal Tolerance Parameters
   yaw_goal_tolerance: 0.3
@@ -78,7 +80,7 @@ DWAPlannerROS:
   # vx_samples: 6
   # vy_samples: 0
   # vtheta_samples: 20
-  # penalize_negative_x: true
+  penalize_negative_x: true
 
   # # Trajectory scoring parameters
   # path_distance_bias: 32.0 # The weighting for how much the controller should stay close to the path it was given

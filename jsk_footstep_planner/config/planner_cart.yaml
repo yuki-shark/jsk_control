@@ -57,16 +57,35 @@ DWAPlannerROS:
   acc_lim_y: 0.05
   acc_lim_th: 1.0
 
-  max_vel_x: 0.2
-  min_vel_x: -0.1
-  max_vel_y: 0.0
-  min_vel_y: -0.0
+  # front = 0.15
+  # step_time = 1.2
+  # outside = 0.4
+  # inside = 0.17
+  # angle = 15
+  # l = 1.45
+  # dt = 0.7
+  # import math
+  # max_vel_x = front/step_time
+  # max_vel_y = (outside - inside)/(step_time * 2)
+  # print("max_vel_x : {x}".format(x=max_vel_x))
+  # print("max_vel_y : {y}".format(y=max_vel_y))
+  # print("max_rot_vel : {rot}".format(rot=min(math.radians(angle)/step_time, math.asin(max_vel_y * dt / l)/dt)))
 
-  max_trans_vel: 0.21
-  min_trans_vel: 0.1
-  # max_rot_vel: 0.17 # l = 1.1 m
-  max_rot_vel: 0.26  # l = 0.5 m
-  min_rot_vel: 0.03
+  # max_vel_x: 0.2
+  # min_vel_x: -0.2
+  max_vel_x: 0.125
+  min_vel_x: -0.125
+
+  max_vel_y: 0.0001
+  min_vel_y: -0.0001
+
+  max_trans_vel: 0.125
+  min_trans_vel: 0.0
+  # max_rot_vel: 0.128 # l = 1.45 m step_time = 0.7
+  # max_rot_vel: 0.17 # l = 1.1 m   step_time = 0.7
+  # max_rot_vel: 0.26  # l = 0.5 m  step_time = 0.7
+  max_rot_vel: 0.080  # l = 1.45 m step_time = 1.2
+  min_rot_vel: 0.0
 
   # Goal Tolerance Parameters
   yaw_goal_tolerance: 0.3

@@ -4,7 +4,9 @@
 # footprint: [[-1.35, -0.4], [-1.35, 0.4], [0.15, 0.4], [0.15, -0.4]]
 # footprint_padding: 0.01
 # robot_base_frame : cart_center (0.5m)
-footprint: [[-0.75, -0.4], [-0.75, 0.4], [0.75, 0.4], [0.75, -0.4]]
+# footprint: [[-0.75, -0.4], [-0.75, 0.4], [0.75, 0.4], [0.75, -0.4]]
+# robot_base_frame : cart_center (0.5m) remove front
+footprint: [[-0.75, -0.30], [-0.75, 0.30], [0.45, 0.30], [0.45, -0.30]]
 footprint_padding: 0.01
 
 # robot_base_frame: BODY
@@ -25,15 +27,15 @@ static:
 
 obstacles_pointcloud:
     observation_sources: pointcloud
-    pointcloud: {data_type: PointCloud2, min_obstacle_height: 0.5, max_obstacle_height: 2.0, clearing: true, marking: true, topic: accumulated_heightmap_pointcloud/output, inf_is_valid: true}
+    pointcloud: {data_type: PointCloud2, min_obstacle_height: 0.3, max_obstacle_height: 2.0, clearing: true, marking: true, topic: accumulated_heightmap_pointcloud/output, inf_is_valid: true}
 
 inflation:
-    cost_scaling_factor: 1.0
+    cost_scaling_factor: 10.0
     inflation_radius: 1.0
     use_custom_inscribed_radius: false
 
 grad_inflation:
-    cost_scaling_factor: 2.0
+    cost_scaling_factor: 5.0
     inflation_radius: 2.0
     use_custom_inscribed_radius: true
     custom_inscribed_radius: 0.3
