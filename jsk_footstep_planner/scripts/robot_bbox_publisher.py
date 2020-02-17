@@ -26,9 +26,9 @@ if transport_object == "push_cart":
   orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
   dimensions = Vector3(1.5, 1.2, 3.0)
 elif transport_object == "wheelbarrow":
-  position = Point(0.9, 0.0, 1.25)
+  position = Point(1.0, 0.0, 1.25)
   orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
-  dimensions = Vector3(2.0, 1.2, 3.0)
+  dimensions = Vector3(2.2, 1.5, 3.0)
 else:
   position = Point(0.0, 0.0, 1.25)
   orientation = Quaternion(0.0, 0.0, 0.0, 0.0)
