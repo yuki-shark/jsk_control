@@ -12,14 +12,40 @@
   <include file="$(find opencv_apps)/launch/hsv_color_filter.launch" >
     <arg name="node_name" value="green_hsv_color_filter" />
     <arg name="image" value="$(arg INPUT_IMAGE)" />
-    <arg name="h_limit_max" value="144" doc="The maximum allowed field value Hue" />
-    <arg name="h_limit_min" value="90"  doc="The minimum allowed field value Hue" />
+    <!-- <arg name="h_limit_max" value="144" doc="The maximum allowed field value Hue" /> -->
+    <!-- <arg name="h_limit_min" value="90"  doc="The minimum allowed field value Hue" /> -->
+    <!-- <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" /> -->
+    <!-- <arg name="s_limit_min" value="170" doc="The minimum allowed field value Saturation" /> -->
+    <!-- <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" /> -->
+    <!-- <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" /> -->
+    <arg name="h_limit_max" value="183" doc="The maximum allowed field value Hue" />
+    <arg name="h_limit_min" value="127"  doc="The minimum allowed field value Hue" />
     <arg name="s_limit_max" value="256" doc="The maximum allowed field value Saturation" />
-    <arg name="s_limit_min" value="170" doc="The minimum allowed field value Saturation" />
+    <arg name="s_limit_min" value="0" doc="The minimum allowed field value Saturation" />
     <arg name="v_limit_max" value="256" doc="The maximum allowed field value Value" />
-    <arg name="v_limit_min" value="95"  doc="The minimum allowed field value Value" />
+    <arg name="v_limit_min" value="0"  doc="The minimum allowed field value Value" />
     <arg name="debug_view" value="false" />
   </include>
+
+  <node name="green_erode_mask_image"
+        pkg="nodelet" type="nodelet"
+        args="load jsk_perception/ErodeMaskImage $(arg MANAGER)">
+    <remap from="~input" to="green_hsv_color_filter/image" />
+    <rosparam>
+      method: 0
+      size: 3
+    </rosparam>
+  </node>
+
+  <node name="green_dilate_mask_image"
+        pkg="nodelet" type="nodelet"
+        args="load jsk_perception/DilateMaskImage $(arg MANAGER)">
+    <remap from="~input" to="green_erode_mask_image/output" />
+    <rosparam>
+      method: 0
+      size: 3
+    </rosparam>
+  </node>
 
   <!-- extract blue boxes -->
   <include file="$(find opencv_apps)/launch/hsv_color_filter.launch" >
