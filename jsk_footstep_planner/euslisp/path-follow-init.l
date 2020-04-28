@@ -26,8 +26,9 @@
 (send *robot* :arms :shoulder-p :joint-angle 20)
 (send *robot* :move-centroid-on-foot :both '(:rleg :lleg))
 (send *robot* :legs :move-end-pos #f(0 0 50))
-(send *robot* :larm :shoulder-r :joint-angle 40)
-(send *robot* :rarm :shoulder-r :joint-angle -40)
+(send *robot* :larm :shoulder-r :joint-angle 30)
+(send *robot* :rarm :shoulder-r :joint-angle -30)
+(send *robot* :rarm :head-neck-p :joint-angle 20)
 (send *ri* :angle-vector (send *robot* :angle-vector) 2000)
 
 
